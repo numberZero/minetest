@@ -1834,8 +1834,6 @@ void Game::run()
 		irr::video::CPostProcessingEffectChain* dof =
 			irrPP->createEffectChain();
 		dof->setKeepOriginalRender(true);
-		dof->createEffect(video::EPE_BLUR_V_MEDIUM);
-		dof->createEffect(video::EPE_BLUR_H_MEDIUM);
 		irr::video::CPostProcessingEffect* dofEff =
 			irrPP->createEffect(video::EPE_DOF);	
 		dofEff->addTextureToShader(dof->getOriginalRender());

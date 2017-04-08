@@ -4,8 +4,12 @@ uniform sampler2D Tex1;
 
 uniform vec2 PixelSize;
 
-float Far = 20000.0;
-float fLength = 12.0/Far;
+float BS = 10.0;
+float Far = 20000.0/BS;
+float fNear = 0.3/Far;
+float fFar = 250.0/Far;
+float sigma = 2.0;
+float coef = -1.0 / (2.0 * sigma * sigma);
 
 void main()
 {
@@ -13,9 +17,8 @@ void main()
 	float fDepth = texture2D(Tex1, vec2(0.5, 0.5)).x;
 	float depth = texture2D(Tex1, uv).x;
 
-	float b = depth / fDepth - 1.0;
-	float blur = 1.0 - exp(-0.5 * b * b);
-	blur = clamp(blur, 0.0, 1.0);
+	float b = log(clamp(depth, fNear, fFar)) - log(clamp(fDepth, fNear, fFar));
+	float blur = 1.0 - exp(coef * b * b);
 
 	float b1 = 1.0;
 	float b2 = blur;

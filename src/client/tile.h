@@ -291,6 +291,8 @@ struct TileLayer
 	 * a color then the color of the node owning this tile.
 	 */
 	video::SColor color;
+
+	f32 scale;
 };
 
 /*!

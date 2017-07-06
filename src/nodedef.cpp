@@ -640,6 +640,9 @@ void ContentFeatures::fillTileAttribs(ITextureSource *tsrc, TileLayer *tile,
 	tile->shader_id     = shader_id;
 	tile->texture       = tsrc->getTextureForMesh(tiledef->name, &tile->texture_id);
 	tile->material_type = material_type;
+	auto texture_size = tile->texture->getOriginalSize();
+	int e_size = std::max(16u, std::min(texture_size.Width, texture_size.Height));
+	tile->scale = 16.0 / e_size;
 
 	// Normal texture and shader flags texture
 	if (use_normal_texture) {

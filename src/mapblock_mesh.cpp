@@ -429,13 +429,15 @@ struct FastFace
 };
 
 static void makeFastFace(const TileSpec &tile, u16 li0, u16 li1, u16 li2, u16 li3,
-	v3f p, v3s16 dir, v3f scale, std::vector<FastFace> &dest)
+	v3f tp, v3f p, v3s16 dir, v3f scale, std::vector<FastFace> &dest)
 {
 	// Position is at the center of the cube.
 	v3f pos = p * BS;
 
-	float x0 = 0.0;
-	float y0 = 0.0;
+	if (dir.X > 0 || dir.Y > 0 || dir.Z < 0)
+		tp -= scale;
+	float x0 = dir.X ? dir.X * tp.Z : dir.Z == 1 ? -tp.X : tp.X;
+	float y0 = dir.Y ? -dir.Y * tp.Z : -tp.Y;
 	float w = 1.0;
 	float h = 1.0;
 
@@ -932,7 +934,7 @@ static void updateFastFaceRow(
 				}
 
 				makeFastFace(tile, lights[0], lights[1], lights[2], lights[3],
-						sp, face_dir_corrected, scale, dest);
+						pf, sp, face_dir_corrected, scale, dest);
 
 				g_profiler->avg("Meshgen: faces drawn by tiling", 0);
 				for(int i = 1; i < continuous_tiles_count; i++){
@@ -1418,19 +1420,23 @@ void MeshCollector::append(const TileLayer &layer,
 		p = &(*buffers)[buffers->size() - 1];
 	}
 
+	f32 scale = 1.0;
+// 	if (tile.world_aligned)
+		scale = layer.scale;
+
 	u32 vertex_count;
 	if (m_use_tangent_vertices) {
 		vertex_count = p->tangent_vertices.size();
 		for (u32 i = 0; i < numVertices; i++) {
 			video::S3DVertexTangents vert(vertices[i].Pos, vertices[i].Normal,
-				vertices[i].Color, vertices[i].TCoords);
+				vertices[i].Color, scale * vertices[i].TCoords);
 			p->tangent_vertices.push_back(vert);
 		}
 	} else {
 		vertex_count = p->vertices.size();
 		for (u32 i = 0; i < numVertices; i++) {
 			video::S3DVertex vert(vertices[i].Pos, vertices[i].Normal,
-				vertices[i].Color, vertices[i].TCoords);
+				vertices[i].Color, scale * vertices[i].TCoords);
 			p->vertices.push_back(vert);
 		}
 	}

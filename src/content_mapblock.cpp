@@ -1235,10 +1235,8 @@ void MapblockMeshGenerator::drawMeshNode()
 		// Convert wallmounted to 6dfacedir.
 		// When cache enabled, it is already converted.
 		facedir = n.getWallMounted(nodedef);
-		if (!enable_mesh_cache) {
-			static const u8 wm_to_6d[6] = {20, 0, 16 + 1, 12 + 3, 8, 4 + 2};
-			facedir = wm_to_6d[facedir];
-		}
+		if (!enable_mesh_cache)
+			facedir = wallmounted_to_facedir[facedir];
 	}
 
 	if (!data->m_smooth_lighting && f->mesh_ptr[facedir]) {

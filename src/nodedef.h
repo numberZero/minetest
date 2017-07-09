@@ -131,9 +131,17 @@ enum LeavesStyle {
 	LEAVES_OPAQUE,
 };
 
+enum AutoScale {
+	AUTOSCALE_DISABLE,
+	AUTOSCALE_ENABLE,
+	AUTOSCALE_FORCE,
+};
+
 class TextureSettings {
 public:
 	LeavesStyle leaves_style;
+	AutoScale autoscale_mode;
+	int node_texture_size;
 	bool opaque_water;
 	bool connected_glass;
 	bool use_normal_texture;
@@ -219,6 +227,7 @@ struct TileDef
 	//! The color of the tile.
 	video::SColor color = video::SColor(0xFFFFFFFF);
 	bool world_aligned = false;
+	float scale = 0.0f;
 
 	struct TileAnimationParams animation;
 
@@ -407,7 +416,7 @@ struct ContentFeatures
 #ifndef SERVER
 	void fillTileAttribs(ITextureSource *tsrc, TileLayer *tile, TileDef *tiledef,
 		u32 shader_id, bool use_normal_texture, bool backface_culling,
-		u8 material_type);
+		u8 material_type, const TextureSettings &tsettings);
 	void updateTextures(ITextureSource *tsrc, IShaderSource *shdsrc,
 		scene::IMeshManipulator *meshmanip, Client *client, const TextureSettings &tsettings);
 #endif

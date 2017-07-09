@@ -192,6 +192,7 @@ void NodeBox::deSerialize(std::istream &is)
 #define TILE_FLAG_TILEABLE_VERTICAL 0x0004
 #define TILE_FLAG_HAS_COLOR 0x0008
 #define TILE_FLAG_WORLD_ALIGNED 0x0010
+#define TILE_FLAG_HAS_SCALE 0x0020
 
 void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 {
@@ -209,6 +210,7 @@ void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 	os << serializeString(name);
 	animation.serialize(os, protocol_version);
 	if (protocol_version >= 35) {
+		bool has_scale = scale > 1e-3;
 		u16 flags = 0;
 		if (backface_culling)
 			flags |= TILE_FLAG_BACKFACE_CULLING;
@@ -220,12 +222,16 @@ void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 			flags |= TILE_FLAG_HAS_COLOR;
 		if (world_aligned)
 			flags |= TILE_FLAG_WORLD_ALIGNED;
+		if (has_scale)
+			flags |= TILE_FLAG_HAS_SCALE;
 		writeU16(os, flags);
 		if (has_color) {
 			writeU8(os, color.getRed());
 			writeU8(os, color.getGreen());
 			writeU8(os, color.getBlue());
 		}
+		if (has_scale)
+			writeF1000(os, scale);
 		return;
 	}
 	writeU8(os, backface_culling);
@@ -255,11 +261,16 @@ void TileDef::deSerialize(std::istream &is, const u8 contenfeatures_version, con
 		tileable_vertical = flags & TILE_FLAG_TILEABLE_VERTICAL;
 		has_color = flags & TILE_FLAG_HAS_COLOR;
 		world_aligned = flags & TILE_FLAG_WORLD_ALIGNED;
+		bool has_scale = flags & TILE_FLAG_HAS_SCALE;
 		if (has_color) {
 			color.setRed(readU8(is));
 			color.setGreen(readU8(is));
 			color.setBlue(readU8(is));
 		}
+		if (has_scale)
+			scale = readF1000(is);
+		else
+			scale = 0.0f;
 		return;
 	}
 	if (version >= 1)
@@ -318,7 +329,9 @@ void TextureSettings::readSettings()
 	bool smooth_lighting           = g_settings->getBool("smooth_lighting");
 	enable_mesh_cache              = g_settings->getBool("enable_mesh_cache");
 	enable_minimap                 = g_settings->getBool("enable_minimap");
+	node_texture_size              = g_settings->getU16("texture_min_size");
 	std::string leaves_style_str   = g_settings->get("leaves_style");
+	std::string autoscale_mode_str = g_settings->get("autoscale_mode");
 
 	// Mesh cache is not supported in combination with smooth lighting
 	if (smooth_lighting)
@@ -333,6 +346,12 @@ void TextureSettings::readSettings()
 	} else {
 		leaves_style = LEAVES_OPAQUE;
 	}
+	if (autoscale_mode_str == "enable")
+		autoscale_mode = AUTOSCALE_ENABLE;
+	else if (autoscale_mode_str == "force")
+		autoscale_mode = AUTOSCALE_FORCE;
+	else
+		autoscale_mode = AUTOSCALE_DISABLE;
 }
 
 /*
@@ -635,14 +654,24 @@ void ContentFeatures::deSerialize(std::istream &is)
 #ifndef SERVER
 void ContentFeatures::fillTileAttribs(ITextureSource *tsrc, TileLayer *tile,
 		TileDef *tiledef, u32 shader_id, bool use_normal_texture,
-		bool backface_culling, u8 material_type)
+		bool backface_culling, u8 material_type, const TextureSettings &tsettings)
 {
 	tile->shader_id     = shader_id;
 	tile->texture       = tsrc->getTextureForMesh(tiledef->name, &tile->texture_id);
 	tile->material_type = material_type;
-	auto texture_size = tile->texture->getOriginalSize();
-	int e_size = std::max(16u, std::min(texture_size.Width, texture_size.Height));
-	tile->scale = 16.0 / e_size;
+
+	bool has_scale = tiledef->scale > 1e-3;
+	if (((tsettings.autoscale_mode == AUTOSCALE_ENABLE) && !has_scale) ||
+			(tsettings.autoscale_mode == AUTOSCALE_FORCE)) {
+		auto texture_size = tile->texture->getOriginalSize();
+		float base_size = tsettings.node_texture_size;
+		float size = std::min(texture_size.Width, texture_size.Height);
+		tile->scale = base_size / std::max(base_size, size);
+	} else if (has_scale) {
+		tile->scale = tiledef->scale;
+	} else {
+		tile->scale = 1.0f;
+	}
 
 	// Normal texture and shader flags texture
 	if (use_normal_texture) {
@@ -846,11 +875,11 @@ void ContentFeatures::updateTextures(ITextureSource *tsrc, IShaderSource *shdsrc
 		tiles[j].world_aligned = tdef[j].world_aligned;
 		fillTileAttribs(tsrc, &tiles[j].layers[0], &tdef[j], tile_shader,
 			tsettings.use_normal_texture,
-			tdef[j].backface_culling, material_type);
+			tdef[j].backface_culling, material_type, tsettings);
 		if (tdef_overlay[j].name != "")
 			fillTileAttribs(tsrc, &tiles[j].layers[1], &tdef_overlay[j],
 				overlay_shader, tsettings.use_normal_texture,
-				tdef[j].backface_culling, overlay_material);
+				tdef[j].backface_culling, overlay_material, tsettings);
 	}
 
 	u8 special_material = material_type;
@@ -866,7 +895,7 @@ void ContentFeatures::updateTextures(ITextureSource *tsrc, IShaderSource *shdsrc
 	for (u16 j = 0; j < CF_SPECIAL_COUNT; j++) {
 		fillTileAttribs(tsrc, &special_tiles[j].layers[0], &tdef_spec[j],
 			special_shader, tsettings.use_normal_texture,
-			tdef_spec[j].backface_culling, special_material);
+			tdef_spec[j].backface_culling, special_material, tsettings);
 	}
 
 	if (param_type_2 == CPT2_COLOR ||

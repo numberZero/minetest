@@ -174,12 +174,13 @@ fake_function() {
 	gettext("Use trilinear filtering when scaling textures.");
 	gettext("Clean transparent textures");
 	gettext("Filtered textures can blend RGB values with fully-transparent neighbors,\nwhich PNG optimizers usually discard, sometimes resulting in a dark or\nlight edge to transparent textures.  Apply this filter to clean that up\nat texture load time.");
-	gettext("Minimum texture size for filters");
-	gettext("When using bilinear/trilinear/anisotropic filters, low-resolution textures\ncan be blurred, so automatically upscale them with nearest-neighbor\ninterpolation to preserve crisp pixels.  This sets the minimum texture size\nfor the upscaled textures; higher values look sharper, but require more\nmemory.  Powers of 2 are recommended.  Setting this higher than 1 may not\nhave a visible effect unless bilinear/trilinear/anisotropic filtering is\nenabled.");
+	gettext("Minimum texture size");
+	gettext("When using bilinear/trilinear/anisotropic filters, low-resolution textures\ncan be blurred, so automatically upscale them with nearest-neighbor\ninterpolation to preserve crisp pixels.  This sets the minimum texture size\nfor the upscaled textures; higher values look sharper, but require more\nmemory.  Powers of 2 are recommended.  Setting this higher than 1 may not\nhave a visible effect unless bilinear/trilinear/anisotropic filtering is\nenabled.\nThis is also used as the base node texture size for world-aligned\ntexture autoscaling.");
 	gettext("FSAA");
 	gettext("Experimental option, might cause visible spaces between blocks\nwhen set to higher number than 0.");
 	gettext("Undersampling");
 	gettext("Undersampling is similar to using lower screen resolution, but it applies\nto the game world only, keeping the GUI intact.\nIt should give significant performance boost at the cost of less detailed image.");
+	gettext("Autoscaling mode");
 	gettext("Shaders");
 	gettext("Shaders");
 	gettext("Shaders allow advanced visual effects and may increase performance on some video cards.\nThis only works with the OpenGL video backend.");

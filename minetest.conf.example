@@ -425,6 +425,8 @@
 #    memory.  Powers of 2 are recommended.  Setting this higher than 1 may not
 #    have a visible effect unless bilinear/trilinear/anisotropic filtering is
 #    enabled.
+#    This is also used as the base node texture size for world-aligned
+#    texture autoscaling.
 #    type: int
 # texture_min_size = 64
 
@@ -438,6 +440,9 @@
 #    It should give significant performance boost at the cost of less detailed image.
 #    type: enum values: 0, 2, 3, 4
 # undersampling = 0
+
+#    type: enum values: disable, enable, force
+# autoscale_mode = disable
 
 #### Shaders
 

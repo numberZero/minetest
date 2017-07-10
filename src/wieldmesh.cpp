@@ -234,7 +234,7 @@ void WieldMeshSceneNode::setCube(const ContentFeatures &f,
 	scene::IMesh *cubemesh = g_extrusion_mesh_cache->createCube();
 	scene::SMesh *copy = cloneMesh(cubemesh);
 	cubemesh->drop();
-	postProcessNodeMesh(copy, f, false, true, &m_material_type, &m_colors);
+	postProcessNodeMesh(copy, f, false, true, &m_material_type, &m_colors, true);
 	changeToMesh(copy);
 	copy->drop();
 	m_meshnode->setScale(wield_scale * WIELD_SCALE_FACTOR);
@@ -524,7 +524,7 @@ void getItemMesh(Client *client, const ItemStack &item, ItemMesh *result)
 		rotateMeshXZby(mesh, -45);
 		rotateMeshYZby(mesh, -30);
 
-		postProcessNodeMesh(mesh, f, false, false, nullptr, &result->buffer_colors);
+		postProcessNodeMesh(mesh, f, false, false, nullptr, &result->buffer_colors, f.drawtype == NDT_NORMAL);
 	}
 	result->mesh = mesh;
 }
@@ -560,7 +560,7 @@ scene::SMesh *getExtrudedMesh(ITextureSource *tsrc, const std::string &imagename
 
 void postProcessNodeMesh(scene::SMesh *mesh, const ContentFeatures &f,
 	bool use_shaders, bool set_material, video::E_MATERIAL_TYPE *mattype,
-	std::vector<ItemPartColor> *colors)
+	std::vector<ItemPartColor> *colors, bool apply_scale)
 {
 	u32 mc = mesh->getMeshBufferCount();
 	// Allocate colors for existing buffers
@@ -607,6 +607,11 @@ void postProcessNodeMesh(scene::SMesh *mesh, const ContentFeatures &f,
 						material.setTexture(1, layer->normal_texture);
 				}
 				material.setTexture(2, layer->flags_texture);
+			}
+			if (apply_scale && tile->world_aligned) {
+				u32 n = buf->getVertexCount();
+				for (u32 k = 0; k != n; ++k)
+					buf->getTCoords(k) *= layer->scale;
 			}
 		}
 	}

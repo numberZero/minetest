@@ -395,8 +395,6 @@ fsaa (FSAA) enum 0 0,1,2,4,8,16
 #    It should give significant performance boost at the cost of less detailed image.
 undersampling (Undersampling) enum 0 0,2,3,4
 
-autoscale_mode (Autoscaling mode) enum disable disable,enable,force
-
 [***Shaders]
 
 #    Shaders allow advanced visual effects and may increase performance on some video cards.
@@ -622,6 +620,14 @@ fog_start (Fog Start) float 0.4 0.0 0.99
 
 #    Makes all liquids opaque
 opaque_water (Opaque liquids) bool false
+
+#    World-aligned textures may be scaled to span several nodes. However,
+#    the server may not send the scale you want, especially if you use
+#    a specially-designed texture pack; with this option, the client tries
+#    to determine the scale automatically basing on the texture size.
+#    See also min_texture_size.
+#    Warning: this option is EXPERIMENTAL!
+autoscale_mode (Autoscaling mode) enum disable disable,enable,force
 
 [**Menus]
 

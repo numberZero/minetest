@@ -304,6 +304,8 @@ fake_function() {
 	gettext("Fraction of the visible distance at which fog starts to be rendered");
 	gettext("Opaque liquids");
 	gettext("Makes all liquids opaque");
+	gettext("Autoscaling mode");
+	gettext("World-aligned textures may be scaled to span several nodes. However,\nthe server may not send the scale you want, especially if you use\na specially-designed texture pack; with this option, the client tries\nto determine the scale automatically basing on the texture size.\nSee also min_texture_size.\nWarning: this option is EXPERIMENTAL!");
 	gettext("Menus");
 	gettext("Clouds in menu");
 	gettext("Use a cloud animation for the main menu background.");

@@ -441,9 +441,6 @@
 #    type: enum values: 0, 2, 3, 4
 # undersampling = 0
 
-#    type: enum values: disable, enable, force
-# autoscale_mode = disable
-
 #### Shaders
 
 #    Shaders allow advanced visual effects and may increase performance on some video cards.
@@ -730,6 +727,15 @@
 #    Makes all liquids opaque
 #    type: bool
 # opaque_water = false
+
+#    World-aligned textures may be scales to span several nodes. However,
+#    the server may not send the scale you want, especially if you use
+#    a specially-designed texture pack; with this option, the client tries
+#    to determine the scale automatically basing on the texture size.
+#    See also min_texture_size.
+#    Warning: this option is EXPERIMENTAL!
+#    type: enum values: disable, enable, force
+# autoscale_mode = disable
 
 ### Menus
 

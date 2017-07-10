@@ -4126,15 +4126,21 @@ Definition tables
 * `"image.png"`
 * `{name="image.png", animation={Tile Animation definition}}`
 * `{name="image.png", backface_culling=bool, tileable_vertical=bool,
-    tileable_horizontal=bool, world_aligned=bool}`
+    tileable_horizontal=bool, align_style="node"/"world"/"user", scale=float}`
     * backface culling enabled by default for most nodes
     * tileable flags are info for shaders, how they should treat texture
 	  when displacement mapping is used
 	  Directions are from the point of view of the tile texture,
 	  not the node it's on
-    * world-aligned textures are not rotated with the node. Used to make
-          various semiblocks look consistent with surrounding nodes.
-          Supported by solid nodes and nodeboxes only.
+    * align style determines will the texture be rotated with the node
+          or kept aligned with its surroundings. "user" means that client
+          setting will be used, similar to `glasslike_framed_optional`.
+          Note: supported by solid nodes and nodeboxes only.
+          Note: old syntax `world_aligned=true` is supported as well.
+    * scale is used on world-aligned textures only, making them effectively
+          span several nodes (exactly `scale` nodes, if used properly;
+          as the effect is applied on per-mapblock basis, (16/scale) should
+          be integer or you may get wrong results).
 * `{name="image.png", color=ColorSpec}`
     * the texture's color will be multiplied with this color.
     * the tile's color overrides the owning node's color in all cases.

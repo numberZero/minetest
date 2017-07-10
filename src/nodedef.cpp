@@ -193,6 +193,7 @@ void NodeBox::deSerialize(std::istream &is)
 #define TILE_FLAG_HAS_COLOR 0x0008
 #define TILE_FLAG_WORLD_ALIGNED 0x0010
 #define TILE_FLAG_HAS_SCALE 0x0020
+#define TILE_FLAG_HAS_ALIGN_STYLE 0x0040
 
 void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 {
@@ -220,10 +221,12 @@ void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 			flags |= TILE_FLAG_TILEABLE_VERTICAL;
 		if (has_color)
 			flags |= TILE_FLAG_HAS_COLOR;
-		if (world_aligned)
-			flags |= TILE_FLAG_WORLD_ALIGNED;
+		if (align_style == ALIGN_STYLE_WORLD)
+			flags |= TILE_FLAG_WORLD_ALIGNED; // compatibility
 		if (has_scale)
 			flags |= TILE_FLAG_HAS_SCALE;
+		if (align_style != ALIGN_STYLE_NODE)
+			flags |= TILE_FLAG_HAS_ALIGN_STYLE;
 		writeU16(os, flags);
 		if (has_color) {
 			writeU8(os, color.getRed());
@@ -232,6 +235,8 @@ void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 		}
 		if (has_scale)
 			writeF1000(os, scale);
+		if (align_style != ALIGN_STYLE_NODE)
+			writeU8(os, align_style);
 		return;
 	}
 	writeU8(os, backface_culling);
@@ -260,8 +265,9 @@ void TileDef::deSerialize(std::istream &is, const u8 contenfeatures_version, con
 		tileable_horizontal = flags & TILE_FLAG_TILEABLE_HORIZONTAL;
 		tileable_vertical = flags & TILE_FLAG_TILEABLE_VERTICAL;
 		has_color = flags & TILE_FLAG_HAS_COLOR;
-		world_aligned = flags & TILE_FLAG_WORLD_ALIGNED;
+		bool world_aligned = flags & TILE_FLAG_WORLD_ALIGNED;
 		bool has_scale = flags & TILE_FLAG_HAS_SCALE;
+		bool has_align_style = flags & TILE_FLAG_HAS_ALIGN_STYLE;
 		if (has_color) {
 			color.setRed(readU8(is));
 			color.setGreen(readU8(is));
@@ -271,6 +277,12 @@ void TileDef::deSerialize(std::istream &is, const u8 contenfeatures_version, con
 			scale = readF1000(is);
 		else
 			scale = 0.0f;
+		if (has_align_style)
+			align_style = static_cast<AlignStyle>(readU8(is));
+		else if (world_aligned)
+			align_style = ALIGN_STYLE_WORLD;
+		else
+			align_style = ALIGN_STYLE_NODE;
 		return;
 	}
 	if (version >= 1)
@@ -331,6 +343,7 @@ void TextureSettings::readSettings()
 	enable_minimap                 = g_settings->getBool("enable_minimap");
 	node_texture_size              = g_settings->getU16("texture_min_size");
 	std::string leaves_style_str   = g_settings->get("leaves_style");
+	std::string world_aligned_mode_str = g_settings->get("world_aligned_mode");
 	std::string autoscale_mode_str = g_settings->get("autoscale_mode");
 
 	// Mesh cache is not supported in combination with smooth lighting
@@ -346,6 +359,16 @@ void TextureSettings::readSettings()
 	} else {
 		leaves_style = LEAVES_OPAQUE;
 	}
+
+	if (world_aligned_mode_str == "enable")
+		world_aligned_mode = WORLDALIGN_ENABLE;
+	else if (world_aligned_mode_str == "force_solid")
+		world_aligned_mode = WORLDALIGN_FORCE;
+	else if (world_aligned_mode_str == "force_nodebox")
+		world_aligned_mode = WORLDALIGN_FORCE_NODEBOX;
+	else
+		world_aligned_mode = WORLDALIGN_DISABLE;
+
 	if (autoscale_mode_str == "enable")
 		autoscale_mode = AUTOSCALE_ENABLE;
 	else if (autoscale_mode_str == "force")
@@ -733,6 +756,21 @@ void ContentFeatures::fillTileAttribs(ITextureSource *tsrc, TileLayer *tile,
 #endif
 
 #ifndef SERVER
+bool isWorldAligned(AlignStyle style, WorldAlignMode mode, NodeDrawType drawtype)
+{
+	if (style == ALIGN_STYLE_WORLD)
+		return true;
+	if (mode == WORLDALIGN_DISABLE)
+		return false;
+	if (style == ALIGN_STYLE_USER_DEFINED)
+		return true;
+	if (drawtype == NDT_NORMAL)
+		return mode >= WORLDALIGN_FORCE;
+	if (drawtype == NDT_NODEBOX)
+		return mode >= WORLDALIGN_FORCE_NODEBOX;
+	return false;
+}
+
 void ContentFeatures::updateTextures(ITextureSource *tsrc, IShaderSource *shdsrc,
 	scene::IMeshManipulator *meshmanip, Client *client, const TextureSettings &tsettings)
 {
@@ -872,7 +910,8 @@ void ContentFeatures::updateTextures(ITextureSource *tsrc, IShaderSource *shdsrc
 
 	// Tiles (fill in f->tiles[])
 	for (u16 j = 0; j < 6; j++) {
-		tiles[j].world_aligned = tdef[j].world_aligned;
+		tiles[j].world_aligned = isWorldAligned(tdef[j].align_style,
+				tsettings.world_aligned_mode, drawtype);
 		fillTileAttribs(tsrc, &tiles[j].layers[0], &tdef[j], tile_shader,
 			tsettings.use_normal_texture,
 			tdef[j].backface_culling, material_type, tsettings);

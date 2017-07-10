@@ -396,8 +396,19 @@ TileDef read_tiledef(lua_State *L, int index, u8 drawtype)
 			L, index, "tileable_horizontal", default_tiling);
 		tiledef.tileable_vertical = getboolfield_default(
 			L, index, "tileable_vertical", default_tiling);
-		tiledef.world_aligned = getboolfield_default(
-			L, index, "world_aligned", false);
+		std::string align_style;
+		if (getstringfield(L, index, "align_style", align_style)) {
+			if (align_style == "user")
+				tiledef.align_style = ALIGN_STYLE_USER_DEFINED;
+			else if (align_style == "world")
+				tiledef.align_style = ALIGN_STYLE_WORLD;
+			else
+				tiledef.align_style = ALIGN_STYLE_NODE;
+		} else {
+			bool world_aligned = false;
+			getboolfield(L, index, "world_aligned", world_aligned);
+			tiledef.align_style = world_aligned ? ALIGN_STYLE_WORLD : ALIGN_STYLE_NODE;
+		}
 		tiledef.scale = getfloatfield_default(
 			L, index, "scale", 0.0f);
 		// color = ...

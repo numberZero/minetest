@@ -137,9 +137,17 @@ enum AutoScale {
 	AUTOSCALE_FORCE,
 };
 
+enum WorldAlignMode {
+	WORLDALIGN_DISABLE,
+	WORLDALIGN_ENABLE,
+	WORLDALIGN_FORCE,
+	WORLDALIGN_FORCE_NODEBOX,
+};
+
 class TextureSettings {
 public:
 	LeavesStyle leaves_style;
+	WorldAlignMode world_aligned_mode;
 	AutoScale autoscale_mode;
 	int node_texture_size;
 	bool opaque_water;
@@ -212,6 +220,12 @@ enum PlantlikeStyle {
 	PLANT_STYLE_HASH2,
 };
 
+enum AlignStyle {
+	ALIGN_STYLE_NODE,
+	ALIGN_STYLE_WORLD,
+	ALIGN_STYLE_USER_DEFINED,
+};
+
 /*
 	Stand-alone definition of a TileSpec (basically a server-side TileSpec)
 */
@@ -226,7 +240,7 @@ struct TileDef
 	bool has_color = false;
 	//! The color of the tile.
 	video::SColor color = video::SColor(0xFFFFFFFF);
-	bool world_aligned = false;
+	AlignStyle align_style;
 	float scale = 0.0f;
 
 	struct TileAnimationParams animation;

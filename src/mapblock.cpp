@@ -361,17 +361,24 @@ void MapBlock::actuallyUpdateDayNightDiff()
 		return;
 	}
 
-	bool differs;
+	bool differs = false;
 
 	/*
 		Check if any lighting value differs
 	*/
+
+	MapNode previous_n(CONTENT_IGNORE);
 	for (u32 i = 0; i < nodecount; i++) {
-		MapNode &n = data[i];
+		MapNode n = data[i];
+
+		// If node is identical to previous node, don't verify if it differs
+		if (n == previous_n)
+			continue;
 
 		differs = !n.isLightDayNightEq(nodemgr);
 		if (differs)
 			break;
+		previous_n = n;
 	}
 
 	/*
@@ -465,7 +472,7 @@ static void getBlockNodeIdMapping(NameIdMapping *nimap, MapNode *nodes,
 
 			const ContentFeatures &f = nodedef->get(global_id);
 			const std::string &name = f.name;
-			if(name == "")
+			if (name.empty())
 				unknown_contents.insert(global_id);
 			else
 				nimap->set(id, name);
@@ -492,40 +499,57 @@ static void correctBlockNodeIds(const NameIdMapping *nimap, MapNode *nodes,
 	// the information to convert those to names.
 	// nodedef contains information to convert our names to globally
 	// correct ids.
-	std::set<content_t> unnamed_contents;
-	std::set<std::string> unallocatable_contents;
+	std::unordered_set<content_t> unnamed_contents;
+	std::unordered_set<std::string> unallocatable_contents;
+
+	bool previous_exists = false;
+	content_t previous_local_id = CONTENT_IGNORE;
+	content_t previous_global_id = CONTENT_IGNORE;
+
 	for (u32 i = 0; i < MapBlock::nodecount; i++) {
 		content_t local_id = nodes[i].getContent();
-		std::string name;
-		bool found = nimap->getName(local_id, name);
-		if(!found){
-			unnamed_contents.insert(local_id);
+		// If previous node local_id was found and same than before, don't lookup maps
+		// apply directly previous resolved id
+		// This permits to massively improve loading performance when nodes are similar
+		// example: default:air, default:stone are massively present
+		if (previous_exists && local_id == previous_local_id) {
+			nodes[i].setContent(previous_global_id);
 			continue;
 		}
+
+		std::string name;
+		if (!nimap->getName(local_id, name)) {
+			unnamed_contents.insert(local_id);
+			previous_exists = false;
+			continue;
+		}
+
 		content_t global_id;
-		found = nodedef->getId(name, global_id);
-		if(!found){
+		if (!nodedef->getId(name, global_id)) {
 			global_id = gamedef->allocateUnknownNodeId(name);
-			if(global_id == CONTENT_IGNORE){
+			if (global_id == CONTENT_IGNORE) {
 				unallocatable_contents.insert(name);
+				previous_exists = false;
 				continue;
 			}
 		}
 		nodes[i].setContent(global_id);
+
+		// Save previous node local_id & global_id result
+		previous_local_id = local_id;
+		previous_global_id = global_id;
+		previous_exists = true;
 	}
-	for(std::set<content_t>::const_iterator
-			i = unnamed_contents.begin();
-			i != unnamed_contents.end(); ++i){
-		errorstream<<"correctBlockNodeIds(): IGNORING ERROR: "
-				<<"Block contains id "<<(*i)
-				<<" with no name mapping"<<std::endl;
+
+	for (const content_t c: unnamed_contents) {
+		errorstream << "correctBlockNodeIds(): IGNORING ERROR: "
+				<< "Block contains id " << c
+				<< " with no name mapping" << std::endl;
 	}
-	for(std::set<std::string>::const_iterator
-			i = unallocatable_contents.begin();
-			i != unallocatable_contents.end(); ++i){
-		errorstream<<"correctBlockNodeIds(): IGNORING ERROR: "
-				<<"Could not allocate global id for node name \""
-				<<(*i)<<"\""<<std::endl;
+	for (const std::string &node_name: unallocatable_contents) {
+		errorstream << "correctBlockNodeIds(): IGNORING ERROR: "
+				<< "Could not allocate global id for node name \""
+				<< node_name << "\"" << std::endl;
 	}
 }
 

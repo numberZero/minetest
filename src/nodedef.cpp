@@ -197,7 +197,7 @@ void NodeBox::deSerialize(std::istream &is)
 
 void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 {
-	if (protocol_version >= 35)
+	if (protocol_version >= 36)
 		writeU8(os, 5);
 	else if (protocol_version >= 30)
 		writeU8(os, 4);
@@ -210,7 +210,7 @@ void TileDef::serialize(std::ostream &os, u16 protocol_version) const
 
 	os << serializeString(name);
 	animation.serialize(os, protocol_version);
-	if (protocol_version >= 35) {
+	if (protocol_version >= 36) {
 		bool has_scale = scale > 1e-3;
 		u16 flags = 0;
 		if (backface_culling)
@@ -734,7 +734,10 @@ void ContentFeatures::fillTileAttribs(ITextureSource *tsrc, TileLayer *tile,
 		tile->material_flags &= ~MATERIAL_FLAG_ANIMATION;
 	} else {
 		std::ostringstream os(std::ios::binary);
-		tile->frames.resize(frame_count);
+		if (!tile->frames) {
+			tile->frames = std::make_shared<std::vector<FrameSpec>>();
+		}
+		tile->frames->resize(frame_count);
 
 		for (int i = 0; i < frame_count; i++) {
 
@@ -749,7 +752,7 @@ void ContentFeatures::fillTileAttribs(ITextureSource *tsrc, TileLayer *tile,
 			if (tile->normal_texture)
 				frame.normal_texture = tsrc->getNormalTexture(os.str());
 			frame.flags_texture = tile->flags_texture;
-			tile->frames[i] = frame;
+			(*tile->frames)[i] = frame;
 		}
 	}
 }

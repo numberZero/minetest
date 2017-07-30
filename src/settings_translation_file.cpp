@@ -304,6 +304,8 @@ fake_function() {
 	gettext("Fraction of the visible distance at which fog starts to be rendered");
 	gettext("Opaque liquids");
 	gettext("Makes all liquids opaque");
+	gettext("World-aligned textures mode");
+	gettext("Textures on a node may be aligned either to the node or to the world.\nThe former mode sutis better things like machines, furniture, etc., while\nthe latter makes stairs and microblocks fit surroundings better.\nHowever, as this possibility is new, thus may not be used by older servers,\nthis option allows enforcing it for certain node types. Note though that\nthat is considered EXPERIMENTAL and may not work properly.");
 	gettext("Autoscaling mode");
 	gettext("World-aligned textures may be scaled to span several nodes. However,\nthe server may not send the scale you want, especially if you use\na specially-designed texture pack; with this option, the client tries\nto determine the scale automatically basing on the texture size.\nSee also min_texture_size.\nWarning: this option is EXPERIMENTAL!");
 	gettext("Menus");

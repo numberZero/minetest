@@ -894,29 +894,7 @@ static void updateFastFaceRow(
 					&& tile.emissive_light == next_tile.emissive_light) {
 				next_is_different = false;
 				continuous_tiles_count++;
-			} else {
-				/*if(makes_face){
-					g_profiler->add("Meshgen: diff: next_makes_face != makes_face",
-							next_makes_face != makes_face ? 1 : 0);
-					g_profiler->add("Meshgen: diff: n_p_corr != p_corr + t_dir",
-							(next_p_corrected != p_corrected + translate_dir) ? 1 : 0);
-					g_profiler->add("Meshgen: diff: next_f_dir_corr != f_dir_corr",
-							next_face_dir_corrected != face_dir_corrected ? 1 : 0);
-					g_profiler->add("Meshgen: diff: next_lights[] != lights[]",
-							(next_lights[0] != lights[0] ||
-							next_lights[0] != lights[0] ||
-							next_lights[0] != lights[0] ||
-							next_lights[0] != lights[0]) ? 1 : 0);
-					g_profiler->add("Meshgen: diff: !(next_tile == tile)",
-							!(next_tile == tile) ? 1 : 0);
-				}*/
 			}
-			/*g_profiler->add("Meshgen: Total faces checked", 1);
-			if(makes_face)
-				g_profiler->add("Meshgen: Total makes_face checked", 1);*/
-		} else {
-			/*if(makes_face)
-				g_profiler->add("Meshgen: diff: last position", 1);*/
 		}
 
 		if(next_is_different)

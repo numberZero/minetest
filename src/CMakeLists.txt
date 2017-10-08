@@ -520,7 +520,6 @@ set(client_SRCS
 	clouds.cpp
 	content_cao.cpp
 	content_cso.cpp
-	content_mapblock.cpp
 	convert_json.cpp
 	drawscene.cpp
 	filecache.cpp
@@ -541,7 +540,8 @@ set(client_SRCS
 	keycode.cpp
 	localplayer.cpp
 	main.cpp
-	mapblock_mesh.cpp
+	mapblock_mesh/mapblock_mesh.cpp
+	mapblock_mesh/content_mapblock.cpp
 	mesh.cpp
 	minimap.cpp
 	particles.cpp

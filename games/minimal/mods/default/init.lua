@@ -757,9 +757,10 @@ minetest.register_node("default:stone_with_iron", {
 
 minetest.register_node("default:dirt_with_grass", {
 	description = "Dirt with grass",
-	tiles ={"default_grass.png", "default_dirt.png",
-		{name = "default_dirt.png^default_grass_side.png",
-		tileable_vertical = false}},
+	tiles = {"default_grass.png", "default_dirt.png"},
+	overlay_tiles = {"", "",
+		{name = "default_grass_side.png", tileable_vertical = false},
+	},
 	groups = {crumbly=3, soil=1},
 	drop = 'default:dirt',
 	sounds = default.node_sound_dirt_defaults({

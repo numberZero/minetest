@@ -517,7 +517,7 @@ stairs.register_stair_and_slab("tiled_n", "experimental:tiled",
 		"Tiled stair (node-aligned)",
 		"Tiled slab (node-aligned)")
 
-stairs.register_stair_and_slab("tiled", "experimantal:tiled",
+stairs.register_stair_and_slab("tiled", "experimental:tiled",
 		{cracky=2},
 		{{name="experimental_tiled.png", align_style="world", scale=8}},
 		"Tiled stair",

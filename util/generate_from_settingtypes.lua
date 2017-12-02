@@ -1,4 +1,14 @@
-local settings = ...
+DIR_DELIM = "/"
+
+function get_mods() return {} end
+
+core = {}
+function core.get_builtin_path() return "builtin/" end
+core.log = print
+
+dofile("builtin/common/misc_helpers.lua")
+local parse_config_file = dofile("builtin/common/parse_config_file.lua")
+local settings = parse_config_file(true, false)
 
 local concat = table.concat
 local insert = table.insert
@@ -123,4 +133,3 @@ file:close()
 file = assert(io.open("src/settings_translation_file.cpp", "w"))
 file:write(create_translation_file())
 file:close()
-

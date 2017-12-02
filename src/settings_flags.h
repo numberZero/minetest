@@ -6,6 +6,17 @@ class Flags
 public:
 	Flags() = default;
 	Flags(const Flags &b) = default;
+	explicit constexpr Flags(unsigned value) : underlying(value) {}
+
+	operator bool() const
+	{
+		return underlying != 0;
+	}
+
+	bool operator! () const
+	{
+		return underlying == 0;
+	}
 
 	Flags operator~ () const
 	{
@@ -33,9 +44,6 @@ public:
 		underlying |= b.underlying;
 		return *this;
 	}
-
-// protected:
-	explicit constexpr Flags(unsigned value) : underlying(value) {}
 
 private:
 	unsigned underlying = 0;

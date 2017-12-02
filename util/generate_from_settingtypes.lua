@@ -127,14 +127,19 @@ local function create_translation_file()
 end
 
 local function escape_id(name)
---[[
+	if name == "" then
+		return "_"
+	end
 	name = name:gsub("[.-]", "_")
 	if name:match("^%d") then
 		return "_" .. name
 	end
 	assert(name:match("^[%w_]*$"))
-]]
 	return name
+end
+
+local function capitalize_id(id)
+	return id:gsub("^(%a)", string.upper):gsub("_(%a)", string.upper)
 end
 
 local function escape_str(text)
@@ -182,7 +187,17 @@ local function create_settings_builtin()
 				insert(result, "\tv3f " .. name .. " = v3f" .. entry.default .. ";\n")
 --			elseif t == "noise_params_2d" then
 --			elseif t == "noise_params_3d" then
---			elseif t == "enum" then
+			elseif t == "enum" then
+				local enum = capitalize_id(name)
+				insert(result, "\tenum class " .. enum .. " {\n")
+				for _, v in ipairs(entry.values) do
+					if v:match("^%d+$") then
+						insert(result, "\t\t_" .. v .. " = " .. v .. ",\n")
+					else
+						insert(result, "\t\t" .. capitalize_id(escape_id(v)) .. ",\n")
+					end
+				end
+				insert(result, "\t} " .. name .. " = " .. enum .. "::" .. capitalize_id(escape_id(entry.default)) .. ";\n")
 --			elseif t == "flags" then
 			end
 		end

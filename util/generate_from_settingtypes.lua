@@ -127,9 +127,6 @@ local function create_translation_file()
 end
 
 local function escape_id(name)
-	if name == "" then
-		return "_"
-	end
 	name = name:gsub("[.-]", "_")
 	if name:match("^%d") then
 		return "_" .. name
@@ -139,11 +136,23 @@ local function escape_id(name)
 end
 
 local function capitalize_id(id)
+	if id:match("^%s*$") then
+		return "_"
+	end
 	return id:gsub("^(%a)", string.upper):gsub("_(%a)", string.upper)
 end
 
 local function escape_str(text)
 	return text:gsub("[\"\\]", "\\%1"):gsub("\n", "\\n")
+end
+
+local function is_numerical(values)
+	for _, v in ipairs(values) do
+		if not v:match("^%d+$") then
+			return false
+		end
+	end
+	return true
 end
 
 local settings_builtin_header = [[
@@ -153,6 +162,7 @@ local settings_builtin_header = [[
 #include <string>
 #include "keycode.h"
 #include "irr_v3d.h"
+#include "settings_flags.h"
 
 struct BuiltinSettings {
 ]]
@@ -188,17 +198,37 @@ local function create_settings_builtin()
 --			elseif t == "noise_params_2d" then
 --			elseif t == "noise_params_3d" then
 			elseif t == "enum" then
-				local enum = capitalize_id(name)
-				insert(result, "\tenum class " .. enum .. " {\n")
-				for _, v in ipairs(entry.values) do
-					if v:match("^%d+$") then
-						insert(result, "\t\t_" .. v .. " = " .. v .. ",\n")
-					else
-						insert(result, "\t\t" .. capitalize_id(escape_id(v)) .. ",\n")
+				if is_numerical(entry.values) then
+					insert(result, "\tint " .. name .. " = " .. entry.default .. ";\n")
+				else
+					local enum = capitalize_id(name)
+					insert(result, "\tenum class " .. enum .. " {\n")
+					for _, v in ipairs(entry.values) do
+						insert(result, "\t\t" .. capitalize_id(v) .. ",\n")
 					end
+					insert(result, "\t} " .. name .. " = " .. enum .. "::" .. capitalize_id(entry.default) .. ";\n")
 				end
-				insert(result, "\t} " .. name .. " = " .. enum .. "::" .. capitalize_id(escape_id(entry.default)) .. ";\n")
---			elseif t == "flags" then
+			elseif t == "flags" then
+				local flags = capitalize_id(name)
+				insert(result, "\tstruct " .. flags .. ": Flags<" .. flags .. "> {\n")
+-- 				insert(result, "\t\tusing Flags<" .. flags .. ">::Flags;\n")
+-- 				insert(result, "\t\tusing Flags<" .. flags .. ">::Flags(Flags<" .. flags .. "> &);\n")
+				insert(result, "\t\t" .. flags .. "(const Flags<" .. flags .. "> &b) : Flags<" .. flags .. ">(b) {};\n")
+				v = 1;
+				for _, f in ipairs(entry.possible) do
+					insert(result, "\t\tstatic constexpr Flags<" .. flags .. "> " .. capitalize_id(f) .. "{" .. v .. "};\n")
+					v = v * 2;
+				end
+				insert(result, "\t} " .. name)
+				if entry.default == "" then
+				else
+					local default = entry.default:gsub("%s+", ""):split(",", true)
+					for i, f in ipairs(default) do
+						default[i] = flags .. "::" .. capitalize_id(f)
+					end
+					insert(result, " = " .. concat(default, " | "))
+				end
+				insert(result, ";\n")
 			end
 		end
 	end

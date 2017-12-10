@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "client.h"
 #include "mapblock.h"
 #include "map.h"
+#include "util/directiontables.h"
 
 /*
 	CachedMapBlockData
@@ -72,7 +73,7 @@ MeshUpdateQueue::~MeshUpdateQueue()
 	}
 }
 
-void MeshUpdateQueue::addBlock(Map *map, v3s16 p, bool ack_block_to_server, bool urgent)
+bool MeshUpdateQueue::addBlock(Map *map, v3s16 p, bool ack_block_to_server, bool urgent)
 {
 	MutexAutoLock lock(m_mutex);
 
@@ -84,20 +85,19 @@ void MeshUpdateQueue::addBlock(Map *map, v3s16 p, bool ack_block_to_server, bool
 	*/
 	std::vector<CachedMapBlockData*> cached_blocks;
 	size_t cache_hit_counter = 0;
+	CachedMapBlockData *cached_block = cacheBlock(map, p, FORCE_UPDATE);
+	if (!cached_block->data)
+		return false; // nothing to update
 	cached_blocks.reserve(3*3*3);
+	cached_blocks.push_back(cached_block);
 	v3s16 dp;
 	for (dp.X = -1; dp.X <= 1; dp.X++)
 	for (dp.Y = -1; dp.Y <= 1; dp.Y++)
-	for (dp.Z = -1; dp.Z <= 1; dp.Z++) {
-		v3s16 p1 = p + dp;
-		CachedMapBlockData *cached_block;
-		if (dp == v3s16(0, 0, 0))
-			cached_block = cacheBlock(map, p1, FORCE_UPDATE);
-		else
-			cached_block = cacheBlock(map, p1, SKIP_UPDATE_IF_ALREADY_CACHED,
-					&cache_hit_counter);
-		cached_blocks.push_back(cached_block);
-	}
+	for (dp.Z = -1; dp.Z <= 1; dp.Z++)
+		if (dp != v3s16(0, 0, 0))
+			cached_blocks.push_back(cacheBlock(map, p + dp,
+					SKIP_UPDATE_IF_ALREADY_CACHED,
+					&cache_hit_counter));
 	g_profiler->avg("MeshUpdateQueue MapBlock cache hit %",
 			100.0f * cache_hit_counter / cached_blocks.size());
 
@@ -119,7 +119,7 @@ void MeshUpdateQueue::addBlock(Map *map, v3s16 p, bool ack_block_to_server, bool
 				q->ack_block_to_server = true;
 			q->crack_level = m_client->getCrackLevel();
 			q->crack_pos = m_client->getCrackPos();
-			return;
+			return true;
 		}
 	}
 
@@ -137,6 +137,7 @@ void MeshUpdateQueue::addBlock(Map *map, v3s16 p, bool ack_block_to_server, bool
 	for (CachedMapBlockData *cached_block : cached_blocks) {
 		cached_block->refcount_from_queue++;
 	}
+	return true;
 }
 
 // Returned pointer must be deleted
@@ -279,10 +280,16 @@ MeshUpdateThread::MeshUpdateThread(Client *client):
 }
 
 void MeshUpdateThread::updateBlock(Map *map, v3s16 p, bool ack_block_to_server,
-		bool urgent)
+		bool urgent, bool update_neighbors)
 {
-	// Allow the MeshUpdateQueue to do whatever it wants
-	m_queue_in.addBlock(map, p, ack_block_to_server, urgent);
+	if (!m_queue_in.addBlock(map, p, ack_block_to_server, urgent)) {
+		warningstream << "Update requested for non-existent block at ("
+				<< p.X << ", " << p.Y << ", " << p.Z << ")" << std::endl;
+		return;
+	}
+	if (update_neighbors)
+		for (v3s16 dp : g_26dirs)
+			m_queue_in.addBlock(map, p + dp, false, urgent);
 	deferUpdate();
 }
 

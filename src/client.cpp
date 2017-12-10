@@ -1517,7 +1517,15 @@ void Client::addUpdateMeshTaskForNode(v3s16 nodepos, bool ack_to_server, bool ur
 	}
 
 	v3s16 blockpos = getNodeBlockPos(nodepos);
+	v3s16 blockpos_relative = blockpos * MAP_BLOCKSIZE;
 	m_mesh_update_thread.updateBlock(&m_env.getMap(), blockpos, ack_to_server, urgent, false);
+	// Leading edge
+	if (nodepos.X == blockpos_relative.X)
+		addUpdateMeshTask(blockpos + v3s16(-1, 0, 0), false, urgent);
+	if (nodepos.Y == blockpos_relative.Y)
+		addUpdateMeshTask(blockpos + v3s16(0, -1, 0), false, urgent);
+	if (nodepos.Z == blockpos_relative.Z)
+		addUpdateMeshTask(blockpos + v3s16(0, 0, -1), false, urgent);
 }
 
 ClientEvent *Client::getClientEvent()

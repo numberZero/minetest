@@ -162,14 +162,15 @@ local settings_builtin_header = [[
 #include <atomic>
 #include "settings_static.h"
 
-struct BuiltinSettings: StaticSettings {
-	BuiltinSettings();
+struct BuiltinSettings {
 ]]
 
 local settings_builtin_footer = [[
 };
 
-extern const BuiltinSettings builtin_settings;
+typedef StaticSettingsManager<BuiltinSettings> BuiltinSettingsManager;
+extern const BuiltinSettings &builtin_settings;
+extern BuiltinSettingsManager builtin_settings_manager;
 ]]
 
 local settings_builtin_impl = [[
@@ -182,12 +183,12 @@ local settings_builtin_impl = [[
 // Definitions
 %s
 // Map
-StaticSettings::SettingTypes types = {
+static BuiltinSettingsManager::SettingTypes types = {
 %s};
 
-BuiltinSettings::BuiltinSettings() : StaticSettings(types)
-{
-}
+static BuiltinSettings settings;
+const BuiltinSettings &builtin_settings(settings);
+BuiltinSettingsManager builtin_settings_manager(types, settings);
 ]]
 
 local function insertf(table, template, ...)
@@ -214,7 +215,7 @@ local function create_settings_builtin()
 			local name = escape_id(entry.name)
 			if t == "int" or t == "float" or t == "bool" then
 				append("\tstd::atomic<%s> %s{%s};\n", t, name, entry.default)
-				insertf(defs, "static Setting%s setting_%s{&BuiltinSettings::%s};\n", capitalize_id(t), name, name)
+				insertf(defs, "static Setting%s<BuiltinSettings> setting_%s{&BuiltinSettings::%s};\n", capitalize_id(t), name, name)
 				insertf(map, "\t{\"%s\", &setting_%s},\n", entry.name, name)
 			elseif t == "enum" then
 				if is_numerical(entry.values) then

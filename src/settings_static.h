@@ -1,7 +1,11 @@
 #pragma once
+#include <cassert>
 #include <atomic>
+#include <initializer_list>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 #include "util/string.h"
 
 template <typename Settings>
@@ -87,6 +91,43 @@ struct SettingFloat: SettingStd<Settings, float> {
 	{
 		settings.*setting = mystof(value, min, max);
 	}
+};
+
+template <typename Settings, typename Enum>
+struct SettingEnum: Setting<Settings> {
+	typedef std::atomic<Enum> Settings:: *PSetting;
+	const PSetting setting;
+
+	// Enumerators should be assigned sequentially, starting from 0 (as by default).
+	// This will throw otherwise.
+	SettingEnum(PSetting _setting, std::initializer_list<std::pair<Enum, std::string>> _labels)
+			: setting(_setting)
+	{
+		labels.resize(_labels.size());
+		int k = 0;
+		for (const auto &p: _labels) {
+			assert(static_cast<int>(p.first) == k);
+			labels[k++] = std::move(p.second);
+		}
+	}
+
+	std::string get(const Settings &settings) override
+	{
+		return labels.at(static_cast<int>((settings.*setting).load()));
+	}
+
+	void set(Settings &settings, const std::string &value) override
+	{
+		for (int k = 0; k < labels.size(); k++) {
+			if (strcasecmp(labels[k].c_str(), value.c_str()) != 0)
+				continue;
+			(settings.*setting).store(static_cast<Enum>(k));
+			break;
+		}
+	}
+
+private:
+	std::vector<std::string> labels;
 };
 
 template <typename Settings>

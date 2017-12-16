@@ -8,99 +8,83 @@
 #include <vector>
 #include "util/string.h"
 
-template <typename Settings>
 struct Setting;
 
-template <typename Settings>
 class StaticSettingsManager {
 public:
-	typedef std::unordered_map<std::string, Setting<Settings> *> SettingTypes;
-	StaticSettingsManager(SettingTypes &_types, Settings &_settings);
+	typedef std::unordered_map<std::string, Setting *> SettingTypes;
+	explicit StaticSettingsManager(SettingTypes &_types);
 	std::string get(const std::string &name) const;
 	std::string set(const std::string &name, const std::string &value);
 
 private:
 	const SettingTypes &types;
-	Settings &settings;
 };
 
-template <typename Settings>
 struct Setting {
-	virtual std::string get(const Settings &) = 0;
-	virtual void set(Settings &, const std::string &) = 0;
+	virtual std::string get() = 0;
+	virtual void set(const std::string &) = 0;
 };
 
-template <typename Settings, typename Type>
-struct SettingStd: Setting<Settings> {
-	typedef std::atomic<Type> Settings:: *PSetting;
-	const PSetting setting;
+template <typename Type>
+struct SettingStd: Setting {
+	std::atomic<Type> *const setting;
 
-	SettingStd(PSetting _setting) : setting(_setting)
+	SettingStd(std::atomic<Type> *_setting) : setting(_setting)
 	{
 	}
 
-	std::string get(const Settings &settings) override
+	std::string get() override
 	{
-		return std::to_string(settings.*setting);
+		return std::to_string(*setting);
 	}
 };
 
-template <typename Settings>
-struct SettingBool: SettingStd<Settings, bool> {
-	using typename SettingStd<Settings, bool>::PSetting;
-	using SettingStd<Settings, bool>::setting;
-	using SettingStd<Settings, bool>::SettingStd;
+struct SettingBool: SettingStd<bool> {
+	using SettingStd<bool>::SettingStd;
 
-	void set(Settings &settings, const std::string &value) override
+	void set(const std::string &value) override
 	{
-		settings.*setting = is_yes(value);
+		*setting = is_yes(value);
 	}
 };
 
-template <typename Settings>
-struct SettingInt: SettingStd<Settings, int> {
-	using typename SettingStd<Settings, int>::PSetting;
-	using SettingStd<Settings, int>::setting;
+struct SettingInt: SettingStd<int> {
 	const int min;
 	const int max;
 
-	SettingInt(PSetting _setting, int _min = INT_MIN, int _max = INT_MAX)
-			: SettingStd<Settings, int>(_setting), min(_min), max(_max)
+	SettingInt(std::atomic<int> *_setting, int _min = INT_MIN, int _max = INT_MAX)
+			: SettingStd<int>(_setting), min(_min), max(_max)
 	{
 	}
 
-	void set(Settings &settings, const std::string &value) override
+	void set(const std::string &value) override
 	{
-		settings.*setting = mystoi(value, min, max);
+		*setting = mystoi(value, min, max);
 	}
 };
 
-template <typename Settings>
-struct SettingFloat: SettingStd<Settings, float> {
-	using typename SettingStd<Settings, float>::PSetting;
-	using SettingStd<Settings, float>::setting;
+struct SettingFloat: SettingStd<float> {
 	const float min;
 	const float max;
 
-	SettingFloat(PSetting _setting, float _min = INT_MIN, float _max = INT_MAX)
-			: SettingStd<Settings, float>(_setting), min(_min), max(_max)
+	SettingFloat(std::atomic<float> *_setting, float _min = INT_MIN, float _max = INT_MAX)
+			: SettingStd<float>(_setting), min(_min), max(_max)
 	{
 	}
 
-	void set(Settings &settings, const std::string &value) override
+	void set(const std::string &value) override
 	{
-		settings.*setting = mystof(value, min, max);
+		*setting = mystof(value, min, max);
 	}
 };
 
-template <typename Settings, typename Enum>
-struct SettingEnum: Setting<Settings> {
-	typedef std::atomic<Enum> Settings:: *PSetting;
-	const PSetting setting;
+template <typename Enum>
+struct SettingEnum: Setting {
+	std::atomic<Enum> *const setting;
 
-	// Enumerators should be assigned sequentially, starting from 0 (as by default).
-	// This will throw otherwise.
-	SettingEnum(PSetting _setting, std::initializer_list<std::pair<Enum, std::string>> _labels)
+	// Enumerators must be assigned sequentially, starting from 0 (as by default).
+	SettingEnum(std::atomic<Enum> *_setting, std::initializer_list<std::pair<Enum, std::string>> _labels)
 			: setting(_setting)
 	{
 		labels.resize(_labels.size());
@@ -111,17 +95,17 @@ struct SettingEnum: Setting<Settings> {
 		}
 	}
 
-	std::string get(const Settings &settings) override
+	std::string get() override
 	{
-		return labels.at(static_cast<int>((settings.*setting).load()));
+		return labels.at(static_cast<int>(setting->load()));
 	}
 
-	void set(Settings &settings, const std::string &value) override
+	void set(const std::string &value) override
 	{
 		for (int k = 0; k < labels.size(); k++) {
 			if (strcasecmp(labels[k].c_str(), value.c_str()) != 0)
 				continue;
-			(settings.*setting).store(static_cast<Enum>(k));
+			setting->store(static_cast<Enum>(k));
 			break;
 		}
 	}
@@ -130,27 +114,24 @@ private:
 	std::vector<std::string> labels;
 };
 
-template <typename Settings>
-StaticSettingsManager<Settings>::StaticSettingsManager(SettingTypes &_types, Settings &_settings)
-		: types(_types), settings(_settings)
+StaticSettingsManager::StaticSettingsManager(SettingTypes &_types)
+		: types(_types)
 {
 }
 
-template <typename Settings>
-std::string StaticSettingsManager<Settings>::get(const std::string &name) const
+std::string StaticSettingsManager::get(const std::string &name) const
 {
 	auto p = types.find(name);
 	if (p == types.end())
 		return{};
-	return p->second->get(settings);
+	return p->second->get();
 }
 
-template <typename Settings>
-std::string StaticSettingsManager<Settings>::set(const std::string &name, const std::string &value)
+std::string StaticSettingsManager::set(const std::string &name, const std::string &value)
 {
 	auto p = types.find(name);
 	if (p == types.end())
 		return{};
-	p->second->set(settings, value);
-	return p->second->get(settings);
+	p->second->set(value);
+	return p->second->get();
 }

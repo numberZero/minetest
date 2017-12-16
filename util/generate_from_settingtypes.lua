@@ -185,9 +185,8 @@ struct BuiltinSettings {
 %s
 };
 
-typedef StaticSettingsManager<BuiltinSettings> BuiltinSettingsManager;
 extern const BuiltinSettings &builtin_settings;
-extern BuiltinSettingsManager builtin_settings_manager;
+extern StaticSettingsManager builtin_settings_manager;
 ]]
 
 local settings_builtin_impl = [[
@@ -195,17 +194,18 @@ local settings_builtin_impl = [[
 
 #include "settings_builtin.h"
 
+static BuiltinSettings settings;
+const BuiltinSettings &builtin_settings(settings);
+
 // Enum settings
 %s
 // Scalar settings
 %s
 // Map
-static BuiltinSettingsManager::SettingTypes types{
+static StaticSettingsManager::SettingTypes types{
 %s};
 
-static BuiltinSettings settings;
-const BuiltinSettings &builtin_settings(settings);
-BuiltinSettingsManager builtin_settings_manager(types, settings);
+StaticSettingsManager builtin_settings_manager(types);
 ]]
 
 local function insertf(table, template, ...)
@@ -240,17 +240,17 @@ local function create_settings_builtin()
 						spec = spec .. ", " .. entry.max
 					end
 				end
-				insertf(defs, "static Setting%s<BuiltinSettings> setting_%s{&BuiltinSettings::%s%s};\n", capitalize_id(t), name, name, spec)
+				insertf(defs, "static Setting%s setting_%s{&settings.%s%s};\n", capitalize_id(t), name, name, spec)
 				insertf(map, "\t{\"%s\", &setting_%s},\n", entry.name, name)
 			elseif t == "enum" then
 				if is_numerical(entry.values) then
 					append("\tstd::atomic<int> %s{%s};\n", name, entry.default)
 					local min, max = range(entry.values)
-					insertf(enums, "static SettingInt<BuiltinSettings> setting_%s{&BuiltinSettings::%s, %d, %d};\n\n", name, name, min, max)
+					insertf(enums, "static SettingInt setting_%s{&settings.%s, %d, %d};\n\n", name, name, min, max)
 				else
 					local enum = capitalize_id(name)
 					insertf(types, "\nenum class %s {\n", enum)
-					insertf(enums, "static SettingEnum<BuiltinSettings, %s> setting_%s{&BuiltinSettings::%s, {\n", enum, name, name)
+					insertf(enums, "static SettingEnum<%s> setting_%s{&settings.%s, {\n", enum, name, name)
 					for _, v in ipairs(entry.values) do
 						local const = capitalize_id(v)
 						insertf(types, "\t%s,\n", const)

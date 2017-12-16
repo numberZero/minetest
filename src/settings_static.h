@@ -44,6 +44,11 @@ struct SettingStd: Setting {
 struct SettingBool: SettingStd<bool> {
 	using SettingStd<bool>::SettingStd;
 
+	std::string get() override
+	{
+		return *setting ? "true" : "false";
+	}
+
 	void set(const std::string &value) override
 	{
 		*setting = is_yes(value);

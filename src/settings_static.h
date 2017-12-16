@@ -27,22 +27,12 @@ struct Setting {
 	virtual void set(const std::string &) = 0;
 };
 
-template <typename Type>
-struct SettingStd: Setting {
-	std::atomic<Type> *const setting;
+struct SettingBool: Setting {
+	std::atomic<bool> *const setting;
 
-	SettingStd(std::atomic<Type> *_setting) : setting(_setting)
+	SettingBool(std::atomic<bool> *_setting) : setting(_setting)
 	{
 	}
-
-	std::string get() override
-	{
-		return std::to_string(*setting);
-	}
-};
-
-struct SettingBool: SettingStd<bool> {
-	using SettingStd<bool>::SettingStd;
 
 	std::string get() override
 	{
@@ -55,13 +45,19 @@ struct SettingBool: SettingStd<bool> {
 	}
 };
 
-struct SettingInt: SettingStd<int> {
+struct SettingInt: Setting {
+	std::atomic<int> *const setting;
 	const int min;
 	const int max;
 
 	SettingInt(std::atomic<int> *_setting, int _min = INT_MIN, int _max = INT_MAX)
-			: SettingStd<int>(_setting), min(_min), max(_max)
+			: setting(_setting), min(_min), max(_max)
 	{
+	}
+
+	std::string get() override
+	{
+		return std::to_string(*setting);
 	}
 
 	void set(const std::string &value) override
@@ -70,13 +66,19 @@ struct SettingInt: SettingStd<int> {
 	}
 };
 
-struct SettingFloat: SettingStd<float> {
+struct SettingFloat: Setting {
+	std::atomic<float> *const setting;
 	const float min;
 	const float max;
 
 	SettingFloat(std::atomic<float> *_setting, float _min = INT_MIN, float _max = INT_MAX)
-			: SettingStd<float>(_setting), min(_min), max(_max)
+			: setting(_setting), min(_min), max(_max)
 	{
+	}
+
+	std::string get() override
+	{
+		return std::to_string(*setting);
 	}
 
 	void set(const std::string &value) override

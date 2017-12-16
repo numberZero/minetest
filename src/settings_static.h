@@ -115,12 +115,12 @@ private:
 	std::vector<std::string> labels;
 };
 
-StaticSettingsManager::StaticSettingsManager(SettingTypes &_types)
+inline StaticSettingsManager::StaticSettingsManager(SettingTypes &_types)
 		: types(_types)
 {
 }
 
-std::string StaticSettingsManager::get(const std::string &name) const
+inline std::string StaticSettingsManager::get(const std::string &name) const
 {
 	auto p = types.find(name);
 	if (p == types.end())
@@ -128,14 +128,14 @@ std::string StaticSettingsManager::get(const std::string &name) const
 	return p->second->get();
 }
 
-void StaticSettingsManager::set(const std::string &name, const std::string &value)
+inline void StaticSettingsManager::set(const std::string &name, const std::string &value)
 {
 	auto p = types.find(name);
 	if (p != types.end())
 		p->second->set(value);
 }
 
-bool StaticSettingsManager::update(const std::string &name, std::string &value)
+inline bool StaticSettingsManager::update(const std::string &name, std::string &value)
 {
 	auto p = types.find(name);
 	if (p == types.end())

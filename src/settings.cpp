@@ -32,6 +32,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "noise.h"
 #include <cctype>
 #include <algorithm>
+#include "settings_static.h"
 
 static Settings main_settings;
 Settings *g_settings = &main_settings;
@@ -763,10 +764,15 @@ bool Settings::setEntry(const std::string &name, const void *data,
 
 		SettingsEntry &entry = set_default ? m_defaults[name] : m_settings[name];
 		old_group = entry.group;
-
-		entry.value    = set_group ? "" : *(const std::string *)data;
-		entry.group    = set_group ? *(Settings **)data : NULL;
 		entry.is_group = set_group;
+		if (set_group) {
+			entry.value.clear();
+			entry.group = *(Settings **)data;
+		} else {
+			entry.value = *(const std::string *)data;
+			entry.group = nullptr;
+			builtin_settings_manager.update(name, entry.value);
+		}
 	}
 
 	delete old_group;

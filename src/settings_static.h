@@ -15,7 +15,8 @@ public:
 	typedef std::unordered_map<std::string, Setting *> SettingTypes;
 	explicit StaticSettingsManager(SettingTypes &_types);
 	std::string get(const std::string &name) const;
-	std::string set(const std::string &name, const std::string &value);
+	void set(const std::string &name, const std::string &value);
+	bool update(const std::string &name, std::string &value);
 
 private:
 	const SettingTypes &types;
@@ -134,4 +135,14 @@ std::string StaticSettingsManager::set(const std::string &name, const std::strin
 		return{};
 	p->second->set(value);
 	return p->second->get();
+}
+
+bool StaticSettingsManager::update(const std::string &name, std::string &value)
+{
+	auto p = types.find(name);
+	if (p == types.end())
+		return false;
+	p->second->set(value);
+	value = p->second->get();
+	return true;
 }

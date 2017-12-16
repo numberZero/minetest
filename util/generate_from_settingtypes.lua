@@ -174,31 +174,32 @@ extern const BuiltinSettings builtin_settings;
 
 local function create_settings_builtin()
 	local result = { settings_builtin_header }
+	local function append(template, ...)
+		insert(result, template:format(...))
+	end
 	for _, entry in ipairs(settings) do
 		local t = entry.type
 		if t == "category" then
 			if entry.level == 0 then
-				insert(result, "\n/*\n * " .. entry.name .. "\n */\n")
+				append("\n/*\n * %s\n */\n", entry.name)
 			else
-				insert(result, "\n/")
-				insert(result, rep("*", entry.level))
-				insert(result, " " .. entry.name .. " */\n")
+				append("\n/%s %s */\n", rep("*", entry.level), entry.name)
 			end
 		else
 			local name = escape_id(entry.name)
 			if t == "int" or t == "float" or t == "bool" then
-				insert(result, "\tstd::atomic<" .. t .. "> " .. name .. "{" .. entry.default .. "};\n")
+				append("\tstd::atomic<%s> %s{%s};\n", t, name, entry.default)
 			elseif t == "enum" then
 				if is_numerical(entry.values) then
-					insert(result, "\tstd::atomic<int> " .. name .. "{" .. entry.default .. "};\n")
+					append("\tstd::atomic<int> %s{%s};\n", name, entry.default)
 				else
 					local enum = capitalize_id(name)
-					insert(result, "\tenum class " .. enum .. " {\n")
+					append("\tenum class %s {\n", enum)
 					for _, v in ipairs(entry.values) do
-						insert(result, "\t\t" .. capitalize_id(v) .. ",\n")
+						append("\t\t%s,\n", capitalize_id(v))
 					end
-					insert(result, "\t};\n")
-					insert(result, "\tstd::atomic<" .. enum .. "> " .. name .. "{" .. enum .. "::" .. capitalize_id(entry.default) .. "};\n")
+					append("\t};\n")
+					append("\tstd::atomic<%s> %s{%s::%s};\n", enum, name, enum, capitalize_id(entry.default))
 				end
 			end
 		end

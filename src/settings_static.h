@@ -128,13 +128,11 @@ std::string StaticSettingsManager::get(const std::string &name) const
 	return p->second->get();
 }
 
-std::string StaticSettingsManager::set(const std::string &name, const std::string &value)
+void StaticSettingsManager::set(const std::string &name, const std::string &value)
 {
 	auto p = types.find(name);
-	if (p == types.end())
-		return{};
-	p->second->set(value);
-	return p->second->get();
+	if (p != types.end())
+		p->second->set(value);
 }
 
 bool StaticSettingsManager::update(const std::string &name, std::string &value)
@@ -146,3 +144,5 @@ bool StaticSettingsManager::update(const std::string &name, std::string &value)
 	value = p->second->get();
 	return true;
 }
+
+extern StaticSettingsManager builtin_settings_manager;

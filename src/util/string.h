@@ -392,7 +392,7 @@ inline float mystof(const std::string &str)
  * @param str
  * @param min Range minimum
  * @param max Range maximum
- * @return The value converted to a signed 32-bit integer and constrained
+ * @return The value converted to a float and constrained
  *	within the range defined by min and max (inclusive)
  */
 inline float mystof(const std::string &str, float min, float max)

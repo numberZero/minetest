@@ -89,21 +89,21 @@ struct SettingEnum: Setting {
 			: setting(_setting)
 	{
 		labels.resize(_labels.size());
-		int k = 0;
+		std::size_t k = 0;
 		for (const auto &p: _labels) {
-			assert(static_cast<int>(p.first) == k);
+			assert(static_cast<std::size_t>(p.first) == k);
 			labels[k++] = std::move(p.second);
 		}
 	}
 
 	std::string get() override
 	{
-		return labels.at(static_cast<int>(setting->load()));
+		return labels.at(static_cast<std::size_t>(setting->load()));
 	}
 
 	void set(const std::string &value) override
 	{
-		for (int k = 0; k < labels.size(); k++) {
+		for (std::size_t k = 0; k < labels.size(); k++) {
 			if (strcasecmp(labels[k].c_str(), value.c_str()) != 0)
 				continue;
 			setting->store(static_cast<Enum>(k));

@@ -8,19 +8,6 @@
 #include <vector>
 #include "util/string.h"
 
-struct Setting;
-
-class StaticSettingsManager
-{
-public:
-	typedef std::unordered_map<std::string, Setting *> SettingTypes;
-	explicit StaticSettingsManager(SettingTypes &_types);
-	bool update(const std::string &name, std::string &value);
-
-private:
-	const SettingTypes &types;
-};
-
 struct Setting
 {
 	virtual std::string get() = 0;
@@ -128,18 +115,25 @@ private:
 	std::vector<std::string> labels;
 };
 
-inline StaticSettingsManager::StaticSettingsManager(SettingTypes &_types) : types(_types)
+class StaticSettingsManager
 {
-}
+public:
+	typedef std::unordered_map<std::string, Setting *> SettingTypes;
 
-inline bool StaticSettingsManager::update(const std::string &name, std::string &value)
-{
-	auto p = types.find(name);
-	if (p == types.end())
-		return false;
-	p->second->set(value);
-	value = p->second->get();
-	return true;
-}
+	explicit StaticSettingsManager(SettingTypes &_types) : types(_types)
+	{
+	}
 
-extern StaticSettingsManager builtin_settings_manager;
+	bool update(const std::string &name, std::string &value)
+	{
+		auto p = types.find(name);
+		if (p == types.end())
+			return false;
+		p->second->set(value);
+		value = p->second->get();
+		return true;
+	}
+
+private:
+	const SettingTypes &types;
+};

@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+#include <cfloat>
 #include <atomic>
 #include <initializer_list>
 #include <string>
@@ -61,8 +62,8 @@ struct SettingFloat : Setting
 	const float min;
 	const float max;
 
-	SettingFloat(std::atomic<float> *_setting, float _min = INT_MIN,
-			float _max = INT_MAX) :
+	SettingFloat(std::atomic<float> *_setting, float _min = -HUGE_VAL,
+			float _max = HUGE_VAL) :
 			setting(_setting),
 			min(_min), max(_max)
 	{

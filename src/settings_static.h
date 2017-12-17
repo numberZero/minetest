@@ -10,7 +10,8 @@
 
 struct Setting;
 
-class StaticSettingsManager {
+class StaticSettingsManager
+{
 public:
 	typedef std::unordered_map<std::string, Setting *> SettingTypes;
 	explicit StaticSettingsManager(SettingTypes &_types);
@@ -20,12 +21,14 @@ private:
 	const SettingTypes &types;
 };
 
-struct Setting {
+struct Setting
+{
 	virtual std::string get() = 0;
 	virtual void set(const std::string &) = 0;
 };
 
-struct SettingBool: Setting {
+struct SettingBool : Setting
+{
 	std::atomic<bool> *const setting;
 
 	SettingBool(std::atomic<bool> *_setting) : setting(_setting)
@@ -34,7 +37,7 @@ struct SettingBool: Setting {
 
 	std::string get() override
 	{
-		return *setting ? "true" : "false";
+		return std::to_string(*setting);
 	}
 
 	void set(const std::string &value) override
@@ -43,13 +46,14 @@ struct SettingBool: Setting {
 	}
 };
 
-struct SettingInt: Setting {
+struct SettingInt : Setting
+{
 	std::atomic<int> *const setting;
 	const int min;
 	const int max;
 
-	SettingInt(std::atomic<int> *_setting, int _min = INT_MIN, int _max = INT_MAX)
-			: setting(_setting), min(_min), max(_max)
+	SettingInt(std::atomic<int> *_setting, int _min = INT_MIN, int _max = INT_MAX) :
+			setting(_setting), min(_min), max(_max)
 	{
 	}
 
@@ -64,13 +68,16 @@ struct SettingInt: Setting {
 	}
 };
 
-struct SettingFloat: Setting {
+struct SettingFloat : Setting
+{
 	std::atomic<float> *const setting;
 	const float min;
 	const float max;
 
-	SettingFloat(std::atomic<float> *_setting, float _min = INT_MIN, float _max = INT_MAX)
-			: setting(_setting), min(_min), max(_max)
+	SettingFloat(std::atomic<float> *_setting, float _min = INT_MIN,
+			float _max = INT_MAX) :
+			setting(_setting),
+			min(_min), max(_max)
 	{
 	}
 
@@ -85,17 +92,18 @@ struct SettingFloat: Setting {
 	}
 };
 
-template <typename Enum>
-struct SettingEnum: Setting {
+template <typename Enum> struct SettingEnum : Setting
+{
 	std::atomic<Enum> *const setting;
 
 	// Enumerators must be assigned sequentially, starting from 0 (as by default).
-	SettingEnum(std::atomic<Enum> *_setting, std::initializer_list<std::pair<Enum, std::string>> _labels)
-			: setting(_setting)
+	SettingEnum(std::atomic<Enum> *_setting,
+			std::initializer_list<std::pair<Enum, std::string>> _labels) :
+			setting(_setting)
 	{
 		labels.resize(_labels.size());
 		std::size_t k = 0;
-		for (const auto &p: _labels) {
+		for (const auto &p : _labels) {
 			assert(static_cast<std::size_t>(p.first) == k);
 			labels[k++] = std::move(p.second);
 		}
@@ -120,8 +128,7 @@ private:
 	std::vector<std::string> labels;
 };
 
-inline StaticSettingsManager::StaticSettingsManager(SettingTypes &_types)
-		: types(_types)
+inline StaticSettingsManager::StaticSettingsManager(SettingTypes &_types) : types(_types)
 {
 }
 

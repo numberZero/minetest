@@ -90,14 +90,10 @@ bool MeshUpdateQueue::addBlock(Map *map, v3s16 p, bool ack_block_to_server, bool
 		return false; // nothing to update
 	cached_blocks.reserve(3*3*3);
 	cached_blocks.push_back(cached_block);
-	v3s16 dp;
-	for (dp.X = -1; dp.X <= 1; dp.X++)
-	for (dp.Y = -1; dp.Y <= 1; dp.Y++)
-	for (dp.Z = -1; dp.Z <= 1; dp.Z++)
-		if (dp != v3s16(0, 0, 0))
-			cached_blocks.push_back(cacheBlock(map, p + dp,
-					SKIP_UPDATE_IF_ALREADY_CACHED,
-					&cache_hit_counter));
+	for (v3s16 dp : g_26dirs)
+		cached_blocks.push_back(cacheBlock(map, p + dp,
+				SKIP_UPDATE_IF_ALREADY_CACHED,
+				&cache_hit_counter));
 	g_profiler->avg("MeshUpdateQueue MapBlock cache hit %",
 			100.0f * cache_hit_counter / cached_blocks.size());
 
@@ -220,10 +216,7 @@ void MeshUpdateQueue::fillDataFromMapBlockCache(QueuedMeshUpdate *q)
 	std::time_t t_now = std::time(0);
 
 	// Collect data for 3*3*3 blocks from cache
-	v3s16 dp;
-	for (dp.X = -1; dp.X <= 1; dp.X++)
-	for (dp.Y = -1; dp.Y <= 1; dp.Y++)
-	for (dp.Z = -1; dp.Z <= 1; dp.Z++) {
+	for (v3s16 dp : g_27dirs) {
 		v3s16 p = q->p + dp;
 		CachedMapBlockData *cached_block = getCachedBlock(p);
 		if (cached_block) {

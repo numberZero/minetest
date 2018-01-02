@@ -393,7 +393,7 @@ leaves_style (Leaves style) enum fancy fancy,simple,opaque
 #    Connects glass if supported by node.
 connected_glass (Connect glass) bool false
 
-#    Enable smooth lighting with simple ambient occlusion.
+#    Enable smooth lighting with optional simple ambient occlusion.
 #    Disable for speed or for different looks.
 smooth_lighting (Smooth lighting) bool true
 
@@ -689,6 +689,10 @@ minimap_double_scan_height (Minimap scan height) bool true
 
 #    Make fog and sky colors depend on daytime (dawn/sunset) and view direction.
 directional_colored_fog (Colored fog) bool true
+
+#    Enable ambient occlusion when using smooth lighting.
+#    Disabling this improves performance but may lead to visual glitches.
+ambient_occlusion (Ambient occlusion) bool true
 
 #    The strength (darkness) of node ambient-occlusion shading.
 #    Lower is darker, Higher is lighter. The valid range of values for this

@@ -204,6 +204,7 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("show_entity_selectionbox", "true");
 	settings->setDefault("texture_clean_transparent", "false");
 	settings->setDefault("texture_min_size", "64");
+	settings->setDefault("ambient_occlusion", "true");
 	settings->setDefault("ambient_occlusion_gamma", "2.2");
 	settings->setDefault("enable_shaders", "true");
 	settings->setDefault("enable_particles", "true");

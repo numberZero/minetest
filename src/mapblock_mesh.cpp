@@ -250,6 +250,12 @@ static u16 getSmoothLightCombined(const v3s16 &p,
 		light_night /= light_count;
 	}
 
+	static thread_local const bool use_ambient_occlusion =
+			g_settings->getBool("ambient_occlusion");
+
+	if (!use_ambient_occlusion)
+		return light_day | (light_night << 8);
+
 	// Boost brightness around light sources
 	bool skip_ambient_occlusion_day = false;
 	if (decode_light(light_source_max) >= light_day) {
@@ -268,7 +274,7 @@ static u16 getSmoothLightCombined(const v3s16 &p,
 			g_settings->getFloat("ambient_occlusion_gamma"), 0.25, 4.0);
 
 		// Table of gamma space multiply factors.
-		static const float light_amount[3] = {
+		static thread_local const float light_amount[3] = {
 			powf(0.75, 1.0 / ao_gamma),
 			powf(0.5,  1.0 / ao_gamma),
 			powf(0.25, 1.0 / ao_gamma)

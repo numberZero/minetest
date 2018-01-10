@@ -269,7 +269,7 @@ struct MeshBufListList
 	 * The array index is the material's layer.
 	 * The vector part groups vertices by material.
 	 */
-	std::vector<MeshBufList> lists[MAX_TILE_LAYERS];
+	std::vector<MeshBufList> lists[MAX_TILE_LAYERS + 1];
 
 	void clear()
 	{
@@ -404,7 +404,7 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 			MapBlockMesh *mapBlockMesh = block->mesh;
 			assert(mapBlockMesh);
 
-			for (int layer = 0; layer < MAX_TILE_LAYERS; layer++) {
+			for (int layer = 0; layer < MAX_TILE_LAYERS + 1; layer++) {
 				scene::IMesh *mesh = mapBlockMesh->getMesh(layer);
 				assert(mesh);
 

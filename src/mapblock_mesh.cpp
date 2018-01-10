@@ -28,6 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "content_mapblock.h"
 #include "util/directiontables.h"
 #include "client/meshgen/collector.h"
+#include "client/meshgen/track.h"
 #include "client/renderingengine.h"
 #include <array>
 
@@ -1107,6 +1108,7 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 		Convert FastFaces to MeshCollector
 	*/
 
+	MapblockMeshTracker tracker;
 	MeshCollector collector;
 
 	{
@@ -1132,7 +1134,7 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 	*/
 
 	{
-		MapblockMeshGenerator generator(data, &collector);
+		MapblockMeshGenerator generator(data, &collector, &tracker);
 		generator.generate();
 	}
 
@@ -1144,28 +1146,8 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 		for(u32 i = 0; i < collector.prebuffers[layer].size(); i++)
 		{
 			PreMeshBuffer &p = collector.prebuffers[layer][i];
-
 			applyTileColor(p);
 
-			// Generate animation data
-			// - Cracks
-			if (p.layer.material_flags & MATERIAL_FLAG_CRACK) {
-				// Find the texture name plus ^[crack:N:
-				std::ostringstream os(std::ios::binary);
-				os << m_tsrc->getTextureName(p.layer.texture_id) << "^[crack";
-				if (p.layer.material_flags & MATERIAL_FLAG_CRACK_OVERLAY)
-					os << "o";  // use ^[cracko
-				u8 tiles = p.layer.scale;
-				if (tiles > 1)
-					os << ":" << (u32)tiles;
-				os << ":" << (u32)p.layer.animation_frame_count << ":";
-				m_crack_materials.insert(std::make_pair(
-						std::pair<u8, u32>(layer, i), os.str()));
-				// Replace tile texture with the cracked one
-				p.layer.texture = m_tsrc->getTextureForMesh(
-						os.str() + "0",
-						&p.layer.texture_id);
-			}
 			// - Texture animation
 			if (p.layer.material_flags & MATERIAL_FLAG_ANIMATION) {
 				// Add to MapBlockMesh in order to animate these tiles
@@ -1225,7 +1207,7 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 				p.layer.applyMaterialOptions(material);
 			}
 
-			scene::SMesh *mesh = (scene::SMesh *)m_mesh[layer];
+			scene::SMesh *mesh = m_mesh[layer];
 
 			// Create meshbuffer, add to mesh
 			if (m_use_tangent_vertices) {
@@ -1278,6 +1260,39 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 		}
 	}
 
+	if (data->m_crack_pos_relative.X >= 0) { // has crack
+		v3s16 p = data->m_crack_pos_relative;
+		MeshTracker &track = tracker.node[p.Z][p.Y][p.X];
+		scene::SMesh *crack_mesh = m_mesh[MAX_TILE_LAYERS];
+		scene::SMeshBuffer *buf = new scene::SMeshBuffer();
+		buf->Vertices.reallocate(track.layer0_vertex_count);
+		buf->Indices.reallocate(track.layer0_index_count);
+		video::SMaterial &material = buf->getMaterial();
+		material.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL;
+		material.setFlag(video::EMF_LIGHTING, false);
+		material.setFlag(video::EMF_BACK_FACE_CULLING, true);
+		material.setFlag(video::EMF_BILINEAR_FILTER, false);
+		material.setFlag(video::EMF_FOG_ENABLE, true);
+		material.setTexture(0, m_tsrc->getTextureForMesh("crack_anylength.png^[verticalframe:5:0"));
+		u16 base_index = 0;
+		for (const TrackData &t : track.faces) {
+			if (t.layer != 0)
+				continue;
+			scene::IMeshBuffer *source = m_mesh[0]->getMeshBuffer(t.buffer);
+			video::S3DVertex *vertices = reinterpret_cast<video::S3DVertex *>(source->getVertices());
+			u16 *indices = source->getIndices();
+			for (int k = 0; k < t.vertex_count; k++)
+				buf->Vertices.push_back(vertices[t.first_vertex_index + k]);
+			for (int k = 0; k < t.index_count; k++)
+				buf->Indices.push_back(indices[t.first_index_index + k] - t.first_vertex_index + base_index);
+			base_index += t.vertex_count;
+		}
+		crack_mesh->addMeshBuffer(buf);
+		buf->drop();
+		std::ostringstream os(std::ios::binary);
+		m_crack_materials.insert(std::make_pair(std::pair<u8, u32>(MAX_TILE_LAYERS, 0), "crack_anylength.png^[verticalframe:5:"));
+	}
+
 	//std::cout<<"added "<<fastfaces.getSize()<<" faces."<<std::endl;
 
 	// Check if animation is required for this mesh
@@ -1289,7 +1304,7 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 
 MapBlockMesh::~MapBlockMesh()
 {
-	for (scene::IMesh *m : m_mesh) {
+	for (scene::SMesh *m : m_mesh) {
 		if (m_enable_vbo && m)
 			for (u32 i = 0; i < m->getMeshBufferCount(); i++) {
 				scene::IMeshBuffer *buf = m->getMeshBuffer(i);

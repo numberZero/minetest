@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 struct MeshMakeData;
 struct MeshCollector;
+struct MapblockMeshTracker;
 
 struct LightPair {
 	u8 lightA;
@@ -48,6 +49,7 @@ class MapblockMeshGenerator
 public:
 	MeshMakeData *data;
 	MeshCollector *collector;
+	MapblockMeshTracker *tracker;
 
 	INodeDefManager *nodedef;
 	scene::IMeshManipulator *meshmanip;
@@ -155,7 +157,8 @@ public:
 	void drawNode();
 
 public:
-	MapblockMeshGenerator(MeshMakeData *input, MeshCollector *output);
+	MapblockMeshGenerator(MeshMakeData *input, MeshCollector *output,
+		MapblockMeshTracker *sniff = nullptr);
 	void generate();
 	void renderSingle(content_t node);
 };

@@ -4,6 +4,7 @@
 #include "irrlichttypes.h"
 #include <S3DVertex.h>
 #include "client/tile.h"
+#include "track.h"
 
 struct PreMeshBuffer
 {
@@ -15,6 +16,7 @@ struct PreMeshBuffer
 struct MeshCollector
 {
 	std::array<std::vector<PreMeshBuffer>, MAX_TILE_LAYERS> prebuffers;
+	MeshTracker *current_tracker = nullptr;
 
 	// clang-format off
 	void append(const TileSpec &material,
@@ -40,5 +42,7 @@ private:
 	// clang-format on
 
 	PreMeshBuffer &findBuffer(const TileLayer &layer, u8 layernum,
-			u32 numIndices);
+			u32 numIndices, u16 *buf_id);
+	void trackVertices(const TileLayer &layer, u8 layernum,
+			u32 numVertices, u32 numIndices, u16 buf_id);
 };

@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "irrlichttypes_extrabloated.h"
 #include "client/tile.h"
+#include "client/meshgen/track.h"
+#include "constants.h"
 #include "voxel.h"
 #include <array>
 #include <map>
@@ -78,6 +80,11 @@ struct MeshMakeData
 	void setSmoothLighting(bool smooth_lighting);
 };
 
+struct MapblockMeshTracker
+{
+	MeshTracker node[MAP_BLOCKSIZE][MAP_BLOCKSIZE][MAP_BLOCKSIZE];
+};
+
 /*
 	Holds a mesh for a mapblock.
 
@@ -104,12 +111,12 @@ public:
 	// Returns true if anything has been changed.
 	bool animate(bool faraway, float time, int crack, u32 daynight_ratio);
 
-	scene::IMesh *getMesh()
+	scene::SMesh *getMesh()
 	{
 		return m_mesh[0];
 	}
 
-	scene::IMesh *getMesh(u8 layer)
+	scene::SMesh *getMesh(u8 layer)
 	{
 		return m_mesh[layer];
 	}
@@ -135,8 +142,9 @@ public:
 	void updateCameraOffset(v3s16 camera_offset);
 
 private:
-	scene::IMesh *m_mesh[MAX_TILE_LAYERS];
+	scene::SMesh *m_mesh[MAX_TILE_LAYERS + 1];
 	MinimapMapblock *m_minimap_mapblock;
+	MapblockMeshTracker tracker;
 	ITextureSource *m_tsrc;
 	IShaderSource *m_shdrsrc;
 

@@ -59,10 +59,12 @@ static constexpr u16 quad_indices[] = {0, 1, 2, 2, 3, 0};
 
 const std::string MapblockMeshGenerator::raillike_groupname = "connect_to_raillike";
 
-MapblockMeshGenerator::MapblockMeshGenerator(MeshMakeData *input, MeshCollector *output)
+MapblockMeshGenerator::MapblockMeshGenerator(MeshMakeData *input,
+		MeshCollector *output, MapblockMeshTracker *sniff)
 {
 	data      = input;
 	collector = output;
+	tracker   = sniff;
 
 	nodedef   = data->m_client->ndef();
 	meshmanip = RenderingEngine::get_scene_manager()->getMeshManipulator();
@@ -1359,6 +1361,8 @@ void MapblockMeshGenerator::generate()
 	for (p.X = 0; p.X < MAP_BLOCKSIZE; p.X++) {
 		n = data->m_vmanip.getNodeNoEx(blockpos_nodes + p);
 		f = &nodedef->get(n);
+		if (tracker)
+			collector->current_tracker = &tracker->node[p.Z][p.Y][p.X];
 		drawNode();
 	}
 }

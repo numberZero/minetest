@@ -1,5 +1,5 @@
 #pragma once
-#include <array>
+#include <unordered_map>
 #include <vector>
 #include "irrlichttypes.h"
 #include <S3DVertex.h>
@@ -18,7 +18,7 @@ struct PreMeshBuffer
 
 struct MeshCollector
 {
-	std::array<std::vector<PreMeshBuffer>, MAX_TILE_LAYERS> prebuffers;
+	std::unordered_multimap<u32, PreMeshBuffer> prebuffers[MAX_TILE_LAYERS];
 
 	// clang-format off
 	void append(const TileRef &material,

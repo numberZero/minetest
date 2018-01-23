@@ -312,7 +312,8 @@ scene::SMesh *createSpecialNodeMesh(Client *client, content_t id, std::vector<It
 	colors->clear();
 	scene::SMesh *mesh = new scene::SMesh();
 	for (auto &prebuffers : collector.prebuffers)
-		for (PreMeshBuffer &p : prebuffers) {
+		for (auto &pp : prebuffers) {
+			PreMeshBuffer &p = pp.second;
 			video::ITexture *texture = p.layer->texture;
 			if (p.layer.material_flags & MATERIAL_FLAG_ANIMATION) {
 				const FrameSpec &frame = p.layer->frames[0];

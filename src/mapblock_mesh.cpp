@@ -1139,9 +1139,10 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 	*/
 
 	for (int layer = 0; layer < MAX_TILE_LAYERS; layer++) {
-		for(u32 i = 0; i < collector.prebuffers[layer].size(); i++)
+		int i = 0;
+		for (auto &pp: collector.prebuffers[layer])
 		{
-			PreMeshBuffer &p = collector.prebuffers[layer][i];
+			PreMeshBuffer &p = pp.second;
 			video::ITexture *texture = p.layer->texture;
 			applyTileColor(p);
 
@@ -1245,6 +1246,7 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 				mesh->addMeshBuffer(buf);
 				buf->drop();
 			}
+			i++;
 		}
 
 		/*

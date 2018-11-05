@@ -635,7 +635,7 @@ int ClientMap::getBackgroundBrightness(float max_d, u32 daylight_factor,
 	return ret;
 }
 
-void ClientMap::renderPostFx(CameraMode cam_mode)
+video::SColor ClientMap::getPostFxColor(CameraMode cam_mode)
 {
 	// Sadly ISceneManager has no "post effects" render pass, in that case we
 	// could just register for that and handle it in renderMap().
@@ -653,14 +653,8 @@ void ClientMap::renderPostFx(CameraMode cam_mode)
 	{
 		post_effect_color = video::SColor(255, 0, 0, 0);
 	}
-	if (post_effect_color.getAlpha() != 0)
-	{
-		// Draw a full-screen rectangle
-		video::IVideoDriver* driver = SceneManager->getVideoDriver();
-		v2u32 ss = driver->getScreenSize();
-		core::rect<s32> rect(0,0, ss.X, ss.Y);
-		driver->draw2DRectangle(post_effect_color, rect);
-	}
+
+	return post_effect_color;
 }
 
 void ClientMap::PrintInfo(std::ostream &out)

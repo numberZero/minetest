@@ -97,5 +97,9 @@ void RenderingCore::drawHUD()
 
 void RenderingCore::drawPostFx()
 {
-	client->getEnv().getClientMap().renderPostFx(camera->getCameraMode());
+	video::SColor post_effect_color = client->getEnv().getClientMap().getPostFxColor(camera->getCameraMode());
+	if (post_effect_color.getAlpha() == 0)
+		return;
+	core::rect<s32> rect(0, 0, screensize.X, screensize.Y);
+	driver->draw2DRectangle(post_effect_color, rect);
 }

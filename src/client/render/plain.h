@@ -19,18 +19,23 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #pragma once
+#include <IRenderTarget.h>
 #include "core.h"
 
 class RenderingCorePlain : public RenderingCore
 {
 protected:
-	int scale = 0;
-	video::ITexture *lowres = nullptr;
+	video::ITexture *solid = nullptr;
+	video::ITexture *translucent = nullptr;
+	video::ITexture *depth = nullptr;
+	video::IRenderTarget *rt = nullptr;
+	video::SMaterial mat;
 
+	void initMaterial();
 	void initTextures() override;
 	void clearTextures() override;
 	void beforeDraw() override;
-	void upscale();
+	void merge();
 
 public:
 	RenderingCorePlain(IrrlichtDevice *_device, Client *_client, Hud *_hud);

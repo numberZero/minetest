@@ -19,10 +19,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "plain.h"
+#include <irrArray.h>
 #include "client.h"
+#include "clientmap.h"
 #include "shader.h"
 #include "client/tile.h"
-#include "clientmap.h"
 
 RenderingCorePlain::RenderingCorePlain(
 	IrrlichtDevice *_device, Client *_client, Hud *_hud)
@@ -52,12 +53,15 @@ void RenderingCorePlain::initTextures()
 {
 	solid = driver->addRenderTargetTexture(
 			screensize, "render_fx_solid", video::ECF_A8R8G8B8);
-// 	translucent = driver->addRenderTargetTexture(
-// 			screensize, "render_fx_translucent", video::ECF_A16B16G16R16F);
+	translucent = driver->addRenderTargetTexture(
+			screensize, "render_fx_translucent", video::ECF_A16B16G16R16F);
 	depth = driver->addRenderTargetTexture(
 			screensize, "render_fx_depth", video::ECF_D16);
 	rt = driver->addRenderTarget();
-// 	rt->setTexture({solid, translucent}, depth);
+	core::array<video::ITexture *> ts(2);
+	ts[0] = solid;
+	ts[1] = translucent;
+// 	rt->setTexture(ts, depth);
 	rt->setTexture(solid, depth);
 	mat.TextureLayer[0].Texture = solid;
 	mat.TextureLayer[1].Texture = translucent;
@@ -67,7 +71,7 @@ void RenderingCorePlain::initTextures()
 void RenderingCorePlain::clearTextures()
 {
 	driver->removeTexture(solid);
-// 	driver->removeTexture(translucent);
+	driver->removeTexture(translucent);
 	driver->removeTexture(depth);
 	driver->removeRenderTarget(rt);
 }
@@ -79,8 +83,14 @@ void RenderingCorePlain::beforeDraw()
 
 void RenderingCorePlain::drawAll()
 {
-	draw3D();
+	smgr->drawAll();
+	driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
+	if (!show_hud)
+		return;
+	hud->drawSelectionMesh();
 	merge();
+	if (draw_wield_tool)
+		camera->drawWieldedTool();
 	drawHUD();
 }
 
@@ -96,6 +106,6 @@ void RenderingCorePlain::merge()
 	};
 	static const u16 indices[6] = {0, 1, 2, 2, 3, 0};
 	driver->setMaterial(mat);
-	driver->setRenderTargetEx(nullptr, video::ECBF_ALL, skycolor);
+	driver->setRenderTargetEx(nullptr, video::ECBF_NONE);
 	driver->drawVertexPrimitiveList(&vertices, 4, &indices, 2);
 }

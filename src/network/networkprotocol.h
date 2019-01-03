@@ -255,8 +255,6 @@ enum ToClientCommand
 		u8 (bool) reconnect
 	*/
 
-	TOCLIENT_INIT_LEGACY = 0x10, // Obsolete
-
 	TOCLIENT_BLOCKDATA = 0x20, //TODO: Multiple blocks
 	TOCLIENT_ADDNODE = 0x21,
 	/*
@@ -266,18 +264,11 @@ enum ToClientCommand
 	*/
 	TOCLIENT_REMOVENODE = 0x22,
 
-	TOCLIENT_PLAYERPOS = 0x23, // Obsolete
-	TOCLIENT_PLAYERINFO = 0x24, // Obsolete
-	TOCLIENT_OPT_BLOCK_NOT_FOUND = 0x25, // Obsolete
-	TOCLIENT_SECTORMETA = 0x26, // Obsolete
-
 	TOCLIENT_INVENTORY = 0x27,
 	/*
 		[0] u16 command
 		[2] serialized inventory
 	*/
-
-	TOCLIENT_OBJECTDATA = 0x28, // Obsolete
 
 	TOCLIENT_TIME_OF_DAY = 0x29,
 	/*
@@ -302,8 +293,6 @@ enum ToClientCommand
 		u16 length
 		wstring message
 	*/
-
-	TOCLIENT_CHAT_MESSAGE_OLD = 0x30, // Obsolete
 
 	TOCLIENT_ACTIVE_OBJECT_REMOVE_ADD = 0x31,
 	/*
@@ -347,8 +336,6 @@ enum ToClientCommand
 		u16 reason_length
 		wstring reason
 	*/
-
-	TOCLIENT_PLAYERITEM = 0x36, // Obsolete
 
 	TOCLIENT_DEATHSCREEN = 0x37,
 	/*
@@ -513,8 +500,6 @@ enum ToClientCommand
 		u8 object_collision
 	*/
 
-	TOCLIENT_DELETE_PARTICLESPAWNER_LEGACY = 0x48, // Obsolete
-
 	TOCLIENT_HUDADD = 0x49,
 	/*
 		u32 id
@@ -676,8 +661,6 @@ enum ToServerCommand
 		std::string player name
 	*/
 
-	TOSERVER_INIT_LEGACY = 0x10, // Obsolete
-
 	TOSERVER_INIT2 = 0x11,
 	/*
 		Sent as an ACK for TOCLIENT_INIT.
@@ -705,10 +688,6 @@ enum ToServerCommand
 	 	u16 message length
 	 	std::string message
 	 */
-
-	TOSERVER_GETBLOCK = 0x20, // Obsolete
-	TOSERVER_ADDNODE = 0x21, // Obsolete
-	TOSERVER_REMOVENODE = 0x22, // Obsolete
 
 	TOSERVER_PLAYERPOS = 0x23,
 	/*
@@ -740,12 +719,6 @@ enum ToServerCommand
 		...
 	*/
 
-	TOSERVER_ADDNODE_FROM_INVENTORY = 0x26, // Obsolete
-	TOSERVER_CLICK_OBJECT = 0x27, // Obsolete
-	TOSERVER_GROUND_ACTION = 0x28, // Obsolete
-	TOSERVER_RELEASE = 0x29, // Obsolete
-	TOSERVER_SIGNTEXT = 0x30, // Obsolete
-
 	TOSERVER_INVENTORY_ACTION = 0x31,
 	/*
 		See InventoryAction in inventorymanager.h
@@ -757,15 +730,10 @@ enum ToServerCommand
 		wstring message
 	*/
 
-	TOSERVER_SIGNNODETEXT = 0x33, // Obsolete
-	TOSERVER_CLICK_ACTIVEOBJECT = 0x34, // Obsolete
-
 	TOSERVER_DAMAGE = 0x35,
 	/*
 		u8 amount
 	*/
-
-	TOSERVER_PASSWORD_LEGACY = 0x36, // Obsolete
 
 	TOSERVER_PLAYERITEM = 0x37,
 	/*
@@ -834,9 +802,6 @@ enum ToServerCommand
 			string name
 		}
 	*/
-
-	TOSERVER_RECEIVED_MEDIA = 0x41, // Obsolete
-	TOSERVER_BREATH = 0x42, // Obsolete
 
 	TOSERVER_CLIENT_READY = 0x43,
 	/*

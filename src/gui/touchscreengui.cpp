@@ -726,6 +726,7 @@ void TouchScreenGUI::translateEvent(const SEvent &event)
 		infostream
 			<< "TouchScreenGUI::translateEvent got event but not visible!"
 			<< std::endl;
+		show();
 		return;
 	}
 

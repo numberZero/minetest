@@ -1811,6 +1811,19 @@ void Game::updateStats(RunStats *stats, const FpsControl &draw_times,
 
 void Game::processUserInput(f32 dtime)
 {
+	static thread_local bool iwa = false, ima = false, chf = false;
+	if (iwa != device->isWindowActive()) {
+		iwa = !iwa;
+		infostream << "isWindowActive: " << iwa << std::endl;
+	}
+	if (ima != isMenuActive()) {
+		ima = !ima;
+		infostream << "isMenuActive: " << ima << std::endl;
+	}
+	if (chf != guienv->hasFocus(gui_chat_console)) {
+		chf = !chf;
+		infostream << "chat hasFocus: " << chf << std::endl;
+	}
 	// Reset input if window not active or some menu is active
 	if (!device->isWindowActive() || isMenuActive() || guienv->hasFocus(gui_chat_console)) {
 		input->clear();

@@ -15,6 +15,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := Irrlicht
 LOCAL_SRC_FILES := deps/Android/Irrlicht/${NDK_TOOLCHAIN_VERSION}/$(APP_ABI)/libIrrlicht.a
+LOCAL_STATIC_LIBRARIES := JPEG PNG
 include $(PREBUILT_STATIC_LIBRARY)
 
 #include $(CLEAR_VARS)
@@ -65,6 +66,27 @@ LOCAL_SRC_FILES := deps/Android/Vorbis/${NDK_TOOLCHAIN_VERSION}/$(APP_ABI)/libvo
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := JPEG
+LOCAL_SRC_FILES := deps/Android/JPEG/${NDK_TOOLCHAIN_VERSION}/$(APP_ABI)/libjpeg.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := PNG
+LOCAL_SRC_FILES := deps/Android/PNG/${NDK_TOOLCHAIN_VERSION}/$(APP_ABI)/libpng.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := SDL2
+LOCAL_SRC_FILES := deps/Android/SDL2/${NDK_TOOLCHAIN_VERSION}/$(APP_ABI)/libSDL2.a
+LOCAL_SHARED_LIBRARIES := hidapi
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := hidapi
+LOCAL_SRC_FILES := deps/Android/SDL2/${NDK_TOOLCHAIN_VERSION}/$(APP_ABI)/libhidapi.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := Minetest
 
 LOCAL_CFLAGS += \
@@ -106,7 +128,8 @@ LOCAL_C_INCLUDES := \
 	deps/Android/LuaJIT/src                         \
 	deps/Android/OpenAL-Soft/include                \
 	deps/Android/sqlite                             \
-	deps/Android/Vorbis/include
+	deps/Android/Vorbis/include                     \
+	deps/Android/SDL2/include
 
 LOCAL_SRC_FILES := \
 	$(wildcard ../../../src/client/*.cpp)           \
@@ -206,14 +229,12 @@ LOCAL_SRC_FILES += \
 # SQLite3
 LOCAL_SRC_FILES += deps/Android/sqlite/sqlite3.c
 
-LOCAL_STATIC_LIBRARIES += Curl Freetype Irrlicht OpenAL mbedTLS mbedx509 mbedcrypto Vorbis LuaJIT android_native_app_glue $(PROFILER_LIBS) #LevelDB
+LOCAL_STATIC_LIBRARIES += Curl Freetype Irrlicht OpenAL mbedTLS mbedx509 mbedcrypto Vorbis SDL2 LuaJIT $(PROFILER_LIBS) #LevelDB
 #OpenSSL Crypto
 
-LOCAL_LDLIBS := -lEGL -lGLESv1_CM -lGLESv2 -landroid -lOpenSLES
-
+LOCAL_LDLIBS := -lEGL -lGLESv1_CM -lGLESv2 -landroid -lOpenSLES -llog -ldl -lm -Wl,--no-undefined -lz
 include $(BUILD_SHARED_LIBRARY)
 
 ifdef GPROF
 $(call import-module,android-ndk-profiler)
 endif
-$(call import-module,android/native_app_glue)

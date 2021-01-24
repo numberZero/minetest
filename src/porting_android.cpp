@@ -37,6 +37,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "prof.h"
 #endif
 
+#include "SDL_system.h"
+/*
 extern int main(int argc, char *argv[]);
 
 void android_main(android_app *app)
@@ -62,7 +64,7 @@ void android_main(android_app *app)
 	infostream << "Shutting down." << std::endl;
 	exit(retval);
 }
-
+*/
 /**
  * Handler for finished message box input
  * Intentionally NOT in namespace porting
@@ -79,8 +81,9 @@ extern "C" {
 }
 
 namespace porting {
-android_app *app_global;
+//android_app *app_global;
 JNIEnv      *jnienv;
+jobject activity;
 jclass       nativeActivity;
 
 jclass findClass(const std::string &classname)
@@ -92,7 +95,7 @@ jclass findClass(const std::string &classname)
 	jmethodID getClassLoader = jnienv->GetMethodID(
 			nativeactivity, "getClassLoader", "()Ljava/lang/ClassLoader;");
 	jobject cls = jnienv->CallObjectMethod(
-						app_global->activity->clazz, getClassLoader);
+						activity, getClassLoader);
 	jclass classLoader = jnienv->FindClass("java/lang/ClassLoader");
 	jmethodID findClass = jnienv->GetMethodID(classLoader, "loadClass",
 					"(Ljava/lang/String;)Ljava/lang/Class;");
@@ -102,17 +105,18 @@ jclass findClass(const std::string &classname)
 
 void initAndroid()
 {
-	porting::jnienv = nullptr;
-	JavaVM *jvm = app_global->activity->vm;
+	jnienv = (JNIEnv *)SDL_AndroidGetJNIEnv();
+	activity = (jobject)SDL_AndroidGetActivity();
+//	JavaVM *jvm = activity->vm;
 	JavaVMAttachArgs lJavaVMAttachArgs;
 	lJavaVMAttachArgs.version = JNI_VERSION_1_6;
 	lJavaVMAttachArgs.name = PROJECT_NAME_C "NativeThread";
 	lJavaVMAttachArgs.group = nullptr;
 
-	if (jvm->AttachCurrentThread(&porting::jnienv, &lJavaVMAttachArgs) == JNI_ERR) {
-		errorstream << "Failed to attach native thread to jvm" << std::endl;
-		exit(-1);
-	}
+//	if (jvm->AttachCurrentThread(&porting::jnienv, &lJavaVMAttachArgs) == JNI_ERR) {
+//		errorstream << "Failed to attach native thread to jvm" << std::endl;
+//		exit(-1);
+//	}
 
 	nativeActivity = findClass("net/minetest/minetest/GameActivity");
 	if (nativeActivity == nullptr)
@@ -136,8 +140,8 @@ void cleanupAndroid()
 	moncleanup();
 #endif
 
-	JavaVM *jvm = app_global->activity->vm;
-	jvm->DetachCurrentThread();
+//	JavaVM *jvm = activity->vm;
+//	jvm->DetachCurrentThread();
 }
 
 static std::string javaStringToUTF8(jstring js)
@@ -191,7 +195,7 @@ void initializePathsAndroid()
 	path_user    = path_storage + DIR_DELIM + PROJECT_NAME_C;
 	path_share   = path_storage + DIR_DELIM + PROJECT_NAME_C;
 	path_cache   = getAndroidPath(nativeActivity,
-			app_global->activity->clazz, mt_getAbsPath, "getCacheDir");
+			activity, mt_getAbsPath, "getCacheDir");
 	migrateCachePath();
 }
 
@@ -209,7 +213,7 @@ void showInputDialog(const std::string &acceptButton, const std::string &hint,
 	jstring jcurrent      = jnienv->NewStringUTF(current.c_str());
 	jint    jeditType     = editType;
 
-	jnienv->CallVoidMethod(app_global->activity->clazz, showdialog,
+	jnienv->CallVoidMethod(activity, showdialog,
 			jacceptButton, jhint, jcurrent, jeditType);
 }
 
@@ -222,7 +226,7 @@ void openURIAndroid(const std::string &url)
 		"porting::openURIAndroid unable to find java openURI method");
 
 	jstring jurl = jnienv->NewStringUTF(url.c_str());
-	jnienv->CallVoidMethod(app_global->activity->clazz, url_open, jurl);
+	jnienv->CallVoidMethod(activity, url_open, jurl);
 }
 
 int getInputDialogState()
@@ -233,7 +237,7 @@ int getInputDialogState()
 	FATAL_ERROR_IF(dialogstate == nullptr,
 		"porting::getInputDialogState unable to find java dialog state method");
 
-	return jnienv->CallIntMethod(app_global->activity->clazz, dialogstate);
+	return jnienv->CallIntMethod(activity, dialogstate);
 }
 
 std::string getInputDialogValue()
@@ -244,7 +248,7 @@ std::string getInputDialogValue()
 	FATAL_ERROR_IF(dialogvalue == nullptr,
 		"porting::getInputDialogValue unable to find java dialog value method");
 
-	jobject result = jnienv->CallObjectMethod(app_global->activity->clazz,
+	jobject result = jnienv->CallObjectMethod(activity,
 			dialogvalue);
 
 	const char *javachars = jnienv->GetStringUTFChars((jstring) result, nullptr);
@@ -267,7 +271,7 @@ float getDisplayDensity()
 		FATAL_ERROR_IF(getDensity == nullptr,
 			"porting::getDisplayDensity unable to find java getDensity method");
 
-		value = jnienv->CallFloatMethod(app_global->activity->clazz, getDensity);
+		value = jnienv->CallFloatMethod(activity, getDensity);
 		firstrun = false;
 	}
 	return value;
@@ -285,7 +289,7 @@ v2u32 getDisplaySize()
 		FATAL_ERROR_IF(getDisplayWidth == nullptr,
 			"porting::getDisplayWidth unable to find java getDisplayWidth method");
 
-		retval.X = jnienv->CallIntMethod(app_global->activity->clazz,
+		retval.X = jnienv->CallIntMethod(activity,
 				getDisplayWidth);
 
 		jmethodID getDisplayHeight = jnienv->GetMethodID(nativeActivity,
@@ -294,7 +298,7 @@ v2u32 getDisplaySize()
 		FATAL_ERROR_IF(getDisplayHeight == nullptr,
 			"porting::getDisplayHeight unable to find java getDisplayHeight method");
 
-		retval.Y = jnienv->CallIntMethod(app_global->activity->clazz,
+		retval.Y = jnienv->CallIntMethod(activity,
 				getDisplayHeight);
 
 		firstrun = false;

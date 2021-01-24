@@ -48,6 +48,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "gui/mainmenumanager.h"
 #endif
 
+#include "SDL_main.h"
+
 #ifdef HAVE_TOUCHSCREENGUI
 	#include "gui/touchscreengui.h"
 #endif

@@ -20,7 +20,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 package net.minetest.minetest;
 
-import android.app.NativeActivity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -36,7 +35,9 @@ import androidx.appcompat.app.AlertDialog;
 
 import java.util.Objects;
 
-public class GameActivity extends NativeActivity {
+import org.libsdl.app.SDLActivity;
+
+public class GameActivity extends SDLActivity {
 	static {
 		System.loadLibrary("c++_shared");
 		System.loadLibrary("Minetest");
@@ -72,11 +73,6 @@ public class GameActivity extends NativeActivity {
 	protected void onResume() {
 		super.onResume();
 		makeFullScreen();
-	}
-
-	@Override
-	public void onBackPressed() {
-		// Ignore the back press so Minetest can handle it
 	}
 
 	public void showDialog(String acceptButton, String hint, String current, int editType) {

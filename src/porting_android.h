@@ -24,14 +24,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #include <jni.h>
-#include <android_native_app_glue.h>
+//#include <android_native_app_glue.h>
 #include <android/log.h>
 
 #include <string>
 
 namespace porting {
 // java app
-extern android_app *app_global;
+//extern android_app *app_global;
 
 // java <-> c++ interaction interface
 extern JNIEnv *jnienv;

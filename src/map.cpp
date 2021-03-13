@@ -207,8 +207,8 @@ void Map::addNodeAndUpdate(v3s16 p, MapNode n,
 
 	// Set the node on the map
 	// Ignore light (because calling voxalgo::update_lighting_nodes)
-	n.setLight(LIGHTBANK_DAY, 0, m_nodedef);
-	n.setLight(LIGHTBANK_NIGHT, 0, m_nodedef);
+	n.setLight(LightBank::Sun, 0, m_nodedef);
+	n.setLight(LightBank::Art, 0, m_nodedef);
 	setNode(p, n);
 
 	// Update lighting
@@ -770,8 +770,8 @@ void Map::transformLiquids(std::map<v3s16, MapBlock*> &modified_blocks,
 		}
 
 		// Ignore light (because calling voxalgo::update_lighting_nodes)
-		n0.setLight(LIGHTBANK_DAY, 0, m_nodedef);
-		n0.setLight(LIGHTBANK_NIGHT, 0, m_nodedef);
+		n0.setLight(LightBank::Sun, 0, m_nodedef);
+		n0.setLight(LightBank::Art, 0, m_nodedef);
 
 		// Find out whether there is a suspect for this action
 		std::string suspect;
